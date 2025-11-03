@@ -1,6 +1,5 @@
 
 from enum import Enum
-from typing import List
 
 # Cards : defines the Card class and related functions (enumerate ?) 
 
@@ -32,42 +31,45 @@ class Card:
             
 
     @staticmethod
-    def follows(card1: "Card", card2: "Card") -> bool:
+    def follows(card1: "Card", card2: "Card", pure : bool) -> bool:
         """Return True iff card2 comes right after card1."""
+        if card1.value == card2.value - 1:
+            pure = True
+            return True
+        if card1.value == 13 and card2.value == 1:  # Ace follows King
+            pure = True
+            return True
         if card1.suit == "joker" or card2.suit == "joker":
+            pure = False 
             return True
         if card1.value == 2 or card2.value == 2:
-            return True
-        if card1.value == card2.value - 1:
-            return True
-        if card1.value == 13 and card2.value == 1:  # Ace follows King
+            pure = False
             return True
         return False
 
     @staticmethod
-    def follows_pure(card1: "Card", card2: "Card") -> bool:
-        """Return True iff card2’s value is exactly one higher than card1’s."""
-        if card1.value == card2.value - 1:
-            return True
-        if card1.value == 13 and card2.value == 1:  # Ace follows King
-            return True
-        return False
-
-    @staticmethod
-    def is_sequence(card_list: List["Card"]) -> bool:
+    def is_sequence(card_list: list["Card"], is_pure: bool) -> bool:
+      
       nb_cards = len(card_list)
+      nb_not_pure : int = 0
+
       for i in range(nb_cards-1):
-        if not Card.follows(card_list[i],card_list[i+1]):
+        
+        pure : bool = True
+
+        if not Card.follows(card_list[i],card_list[i+1],pure):
           return False
+        
+        if not pure:
+            if nb_not_pure == 0:
+                is_pure = pure
+                nb_not_pure += 1
+
+            else:
+                return False
+
       return True
 
-    @staticmethod
-    def is_pure_sequence(card_list: List["Card"]) -> bool:
-      nb_cards = len(card_list)
-      for i in range(nb_cards-1):
-        if not Card.follows_pure(card_list[i],card_list[i+1]):
-          return False
-      return True
 
             
 

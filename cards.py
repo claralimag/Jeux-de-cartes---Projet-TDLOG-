@@ -12,12 +12,23 @@ class Suit(Enum): #suit means "couleur" in french
     JOKER = "joker" 
 
 class Card:
-    def __init__(self, suit: Suit, value: int, face_up : bool):
+    def __init__(self, suit: Suit, value: int):
         if not (1 <= value <= 13):
           raise ValueError("value must be between 1 and 13")
         self.value = value
         self.suit = suit
-        self.face_up = face_up #if card is face-up (seen) or face-down (hidden) 
+        if self.suit == "joker":
+            self.point = 10
+        else:
+            if card.value == 1:
+                self.point = 15
+            if card.value == 2:
+                self.point = 10
+            if card.value in [3,4,5,6,7]:
+                self.point = 5
+            if card.value in [8,9,10,11,12,13]:
+                self.point = 10
+            
 
     @staticmethod
     def follows(card1: "Card", card2: "Card") -> bool:

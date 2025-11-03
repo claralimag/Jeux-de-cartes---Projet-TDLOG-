@@ -1,6 +1,6 @@
 # Defined by a name, a list of cards, a board (BoardPlayer) and a score (functions : add card, move card, play a card (add to board - maybe exception?), change score)
 from cards import Card, Suit
-from board import BoardPlayer
+from boardplayer import BoardPlayer
 
 
 class Player :

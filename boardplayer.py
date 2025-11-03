@@ -21,9 +21,9 @@ class BoardPlayer :
         i : int = -1
 
         if whichgame < self.board.number_of_games:
-            if not(self.board.isclean[whichgame]):
+            if not(self.board.cardgames[whichgame][1]):
                 if not(isclean):
-                    return -1        #add exception explaining why
+                    return -1        #the game is alredy not clean
         
         color = listofcards[0].suit     #compute the cards suit
         number = listofcards[0].value   #compute the cards value
@@ -39,16 +39,8 @@ class BoardPlayer :
         else:
             i = 1
 
-        for el in listofcards:
-            if abs(number - el.value) > 1 or (el.suit == color):
-                return -1
-            
-            else:
-                number = el.value
-        
         return i
         
-
 
     #Tests wether or not the cards selected by the player can be played
     def can_you_play(self, listofcards : list[Card], isclean : bool) -> bool:
@@ -66,52 +58,100 @@ class BoardPlayer :
         if n<3:
             return False
 
-        color = listofcards[0].suit     #compute the cards suit
-        number = listofcards[0].value   #compute the cards value
-
-        for el in listofcards:
-            if abs(number - el.value) > 1 or (el.suit == color):
-                return False
-            
-            else:
-                number = el.value
-        
         return True
     
-    def scorenewgame(self,listofcards) -> int:
-        pass
+
+    def scorenewgame(self,listofcards, whichgame, clean) -> int:
+        s : int = 0
+
+        for el in listofcards:
+            s+= el.point
+
+        if len(listofcards) >= 7 : #Is canastra ?
+            if len(listofcards) == 13:
+                if clean:
+                    s+= 500
+                else: 
+                    s+= 250
+            if len(listofcards) == 14:
+                if clean:
+                    s+= 1000
+                else: 
+                    s+= 500
+            else:
+                if clean:
+                    s+= 200
+                else: 
+                    s+= 100
+        
+        self.cardgames[whichgame][2] = s
+
+        return s 
+
 
     def scoreexistinggame(self, listofcards, clean, whichgame) -> int:
-        pass
+        
+        original_game : list[Card] = self.cardgames[whichgame][0]
+
+        n_list : int = len(listofcards)
+
+        n_original : int = len(original_game)
+
+        s : int = 0
+
+        for el in listofcards:
+            s+= el.point
+
+        if n_list == 13 and n_original < 13  : 
+            if clean:
+                s+= 500
+            else: 
+                s+= 250
+        
+        elif n_list == 14 and n_original < 14:
+            if clean:
+                s+= 1000
+            else: 
+                s+= 500
+        
+        elif n_list >= 7 and n_original < 7:
+            if clean:
+                s+= 200
+            else: 
+                s+= 100
+        
+        self.cardgames[whichgame][2] += s
+
+        return s 
+
 
     def add_to_existing_game(self, listofcards : list[Card], whichgame: int, clean: bool)  -> int:
         i : int = self.can_you_add_to_existing_game(listofcards, whichgame, clean)
 
         if i >= 0 :
-            self.isclean[whichgame] = clean
-            if i == 0:
-                self.cardgames[whichgame] = listofcards + self.cardgames[whichgame]
-            else: 
-                self.cardgames[whichgame] = self.cardgames[whichgame] + listofcards
+            self.cardgames[whichgame][1] = clean
 
-            score = self.scoreexistinggame(listofcards)
+            if i == 0:
+                self.cardgames[whichgame][0] = listofcards + self.cardgames[whichgame]
+
+            else: 
+                self.cardgames[whichgame][0] = self.cardgames[whichgame] + listofcards
+
+            score = self.scoreexistinggame(listofcards, whichgame, clean) #update score
+
             return score
         
         else :
             print("Card's selection is not playable") 
 
+
     def add_to_board(self, listofcards : list[Card], clean) -> int:
 
         if self.can_you_play(listofcards, clean):
             
-            self.cardgames.append(listofcards)
-            self.isclean[-1] = clean
+            self.cardgames.append(listofcards,clean, 0)
             self.number_of_games += 1
-            score : int = self.scorenewgame(listofcards)
+            score : int = self.scorenewgame(listofcards, self.number_of_games - 1, clean)
+
             return score
 
-# BoardGame : defines the board of the game (players, deck, discard pile, functions : add player, remove player, draw card from deck, draw card from discard pile, add card to discard pile)
-
-class BoardGame:
-    def __init__():
-        return

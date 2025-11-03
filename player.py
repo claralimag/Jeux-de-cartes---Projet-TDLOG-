@@ -30,14 +30,6 @@ class Player :
         '''
         for el in listofcards:
             self.cards.append(el)
-    
-    #checks if the new sequence has a jocker
-    def is_it_clean(self, listofcards : list[Card]) -> bool:
-        for el in listofcards:
-            if el == Suit.JOKER:
-                return False
-        
-        return True 
         
     #Updates the score when the player chooses to play a new set of cards
     def updatescore(self,scorepoints : int) -> None:
@@ -57,7 +49,7 @@ class Player :
         on the contrary it will be bigger then the number of games in the table)
         
         '''
-        isclean : bool = self.is_it_clean(listofcards)
+        isclean : bool = True
 
         if whichgame > self.board.number_of_games : 
             newscore : int = self.board.add_to_existing_game(listofcards, whichgame, isclean)   #add to sequence of cards number whichgame listofcards, returns the new cards

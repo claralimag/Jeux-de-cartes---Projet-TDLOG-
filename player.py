@@ -51,6 +51,10 @@ class Player :
         '''
         isclean : bool = True
 
+        #can you play ?
+        if not(Card.is_sequence(listofcards, isclean)):
+            print("Problem with selected sequence")
+
         if whichgame > self.board.number_of_games : 
             newscore : int = self.board.add_to_existing_game(listofcards, whichgame, isclean)   #add to sequence of cards number whichgame listofcards, returns the new cards
             

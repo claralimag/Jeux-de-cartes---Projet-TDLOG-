@@ -9,7 +9,7 @@ class Suit(Enum): #suit means "couleur" in french
     DIAMONDS = "diamonds"
     HEARTS = "hearts"
     SPADES = "spades"
-    JOKER = "joker"
+    JOKER = "joker" 
 
 class Card:
     def __init__(self, suit: Suit, value: int, face_up : bool):
@@ -56,4 +56,37 @@ class Card:
         if not Card.follows_pure(card_list[i],card_list[i+1]):
           return False
       return True
+
+    @staticmethod 
+    def is_canastra(card_list: List["Card"]) -> bool, bool:
+        if len(card_list) >= 7:
+            return is_sequence(card_list)
+        else:
+            return False
+
+    @staticmethod
+    def is_fivehunderd_canastra(card_list : List["Card]):
+        if 
+    
+    @staticmethod
+    def sequence_points(card_list: List["Card"]) -> int:
+        points = 0
+        for card in card_list:
+            if card.suit == "joker": #joker has an arbitrary value, it shouldn't be taken into acount.
+                points += 50
+            else:
+                if card.value == 1:
+                    points += 15
+                if card.value == 2:
+                    points += 10
+                if card.value in [3,4,5,6,7]:
+                    points += 5
+                if card.value in [8,9,10,11,12,13]:
+                    points += 10
+            (canstra,pure_canastra) = is_canatra(card_list)
+            if canstra:
+                points +=100
+            if pure_canastra:
+                points += 100
+            
 

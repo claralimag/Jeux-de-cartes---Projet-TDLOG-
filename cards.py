@@ -46,6 +46,17 @@ class Card:
             pure = False
             return True
         return False
+    
+    @staticmethod
+    def same_suit(card1: "Card", card2: "Card", pure : bool) -> bool:
+        if card1.suit == card2.suit:
+            return True
+        if card1.value == 2 or card2.value == 2 :
+            pure = False
+            return True
+        if card1.suit == "jocker" or card2.suit == "jocker":
+            pure = False
+            return True
 
     @staticmethod
     def is_sequence(card_list: list["Card"], is_pure: bool) -> bool:
@@ -55,10 +66,17 @@ class Card:
 
       for i in range(nb_cards-1):
         
-        pure : bool = True
+        pure_suit : bool = True
 
-        if not Card.follows(card_list[i],card_list[i+1],pure):
+        pure_follow : bool = True
+
+        if not Card.follows(card_list[i],card_list[i+1],pure_suit):
           return False
+        
+        if not Card.same_suit(card_list[i], card_list[i+1],pure_follow):
+            return False
+        
+        pure = pure_suit or pure_follow
         
         if not pure:
             if nb_not_pure == 0:

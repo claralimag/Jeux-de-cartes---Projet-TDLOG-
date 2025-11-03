@@ -3,9 +3,7 @@ from cards import Card
 
 class BoardPlayer :
     def __init__(self):
-        cardgames : list[list[Card]] = []
-        gamepoints : list[int] = []
-        isclean : list[bool] = []
+        cardgames : list[tuple[list[Card], bool, int]]  = [] #bool stores if the game is clean and int stores the number of points
         numberofgames : int = 0
 
     #verifies if the list of cards can be added to a existing game :

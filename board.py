@@ -4,6 +4,7 @@ from cards import Card
 class BoardPlayer :
     def __init__(self):
         cardgames : list[list[Card]] = []
+        gamepoints : list[int] = []
         isclean : list[bool] = []
         numberofgames : int = 0
 

@@ -2,12 +2,21 @@
 import random
 from player import Player
 from rules import Rules
+from cards import Card, Suit
 
 
 class BoardGame:
-    def __init__(self):
-        self.players = []
+    def __init__(self, players0 : list[Player]):
+
+        self.players = players0
+
+        #Initial deck 
         self.deck = []
+
+        #Initial pot 
+        self.pots : tuple[list[Card], list[Card]]
+        
+        #Init discard pile :
         self.discard_pile = []
 
     def add_player(self, player):
@@ -45,11 +54,23 @@ class BoardGame:
 
         random.shuffle(self.deck)
 
+        pot_1 : list[Card] = []
+        pot_2 : list[Card] = []
+
         # Distribuer 11 cartes à chaque joueur
         for _ in range(rules.cards_per_player):
+            el1 = random.randint(0,len(self.deck))
+            pot_1.append(self.deck(el1))
+            self.deck.pop(el1)
+
+            el2 = random.randint(0,len(self.deck))
+            pot_2.append(self.deck(el2))
+            self.deck.pop(el2)
             for p in self.players:
                 p.add_card(self.deck.pop())
 
+        
+        self.pots : tuple[list[Card], list[Card]] = [pot_1, pot_2]
         # Première carte sur la défausse
         self.discard_pile.append(self.deck.pop())
 

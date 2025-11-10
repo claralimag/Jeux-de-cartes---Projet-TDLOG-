@@ -6,7 +6,7 @@ from cards import Card, Suit
 
 
 class BoardGame:
-    def __init__(self, players0 : list[Player]):
+    def __init__(self, players0 : list[Player], open : bool):
 
         self.players = players0
 
@@ -15,9 +15,12 @@ class BoardGame:
 
         #Initial pot 
         self.pots : tuple[list[Card], list[Card]]
-        
+
         #Init discard pile :
         self.discard_pile = []
+
+        #Open Buraco
+        self.is_open : bool = open
 
     def add_player(self, player):
         self.players.append(player)
@@ -30,10 +33,24 @@ class BoardGame:
             raise Exception("Deck is empty!")
         return self.deck.pop()
 
-    def draw_from_discard(self):
+    def draw_from_discard(self, whichplayer : int) -> None:
         if not self.discard_pile:
             raise Exception("Discard pile is empty!")
-        return self.discard_pile.pop()
+        
+        self.players[whichplayer].add_card(self.discard_pile)
+        self.discard_pile = []
+
+    def draw_from_discard(self, whichplayer : int, cards : list[Card]) -> None:
+        if not self.discard_pile:
+            raise Exception("Discard pile is empty!")
+        
+        score : int = self.players[whichplayer].play_cards(self.discard_pile + cards)
+
+        if score == 0:
+            print("You can't draw from the trash")
+
+        else:
+            self.discard_pile = []
 
     def add_to_discard(self, card):
         self.discard_pile.append(card)
@@ -66,11 +83,12 @@ class BoardGame:
             el2 = random.randint(0,len(self.deck))
             pot_2.append(self.deck(el2))
             self.deck.pop(el2)
+
             for p in self.players:
                 p.add_card(self.deck.pop())
 
-        
         self.pots : tuple[list[Card], list[Card]] = [pot_1, pot_2]
+
         # Première carte sur la défausse
         self.discard_pile.append(self.deck.pop())
 

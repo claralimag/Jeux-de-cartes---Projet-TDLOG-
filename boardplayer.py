@@ -125,8 +125,40 @@ class BoardPlayer :
         return s 
 
 
-    def add_to_existing_game(self, listofcards : list[Card], whichgame: int, clean: bool)  -> int:
-        i : int = self.can_you_add_to_existing_game(listofcards, whichgame, clean)
+    def add_to_existing_game(self, listofcards : list[Card], whichgame: int)  -> int:
+        "Input : listofcards : liste de cartes non ordonnée qui seront placées dans le jeu"
+        "whichgame : entier correspondant à l'indice que le jeu doit être placé"
+        "Lorsqu'on appelle la fonction, on s'attend à qu'elle teste si listofcards peut être ajoutée dans le jeu[whichgame], si elle ne peut pas elle retourne 0"
+        "Pour effectuer ce test, il faut vérifier qu'elle peut être insérée dans le jeu existant (ça colle bien soit avec la fin soit avec le debut) et que le jeu existant n'est pas deja sale si la liste possède un jocker "
+        "si tout va bien return le score en utilisant la fonction score newgame qui prend en argument la listede cartes avec le jocker deja bien placée qui a été ajoutee au jeu "
+        "Rappel : il y a moyen que le existing game ait un jocker libre et dcp quand t'appliques sequence il faut prendre en compte que peut être tu peux changer son emplacement pour que ça marche "
+        list = Card.order(listofcards)
+        if list is None:
+            return False
+        
+        listcards, listjockers = order()
+        if listcards is None :
+            return 0 
+
+        if whichgame < self.board.number_of_games:
+            if not(self.board.cardgames[whichgame][1]):
+                if not(clean):
+                    print("Card's selection is not playable") 
+                    return 0            #the game is alredy not clean
+        
+        color = listofcards[0].suit     #compute the cards suit
+        number = listofcards[0].value   #compute the cards value
+
+        if not(color == self.cardgames[whichgame[0]].suit):
+            return -1
+        
+        if not(self.cardgames[whichgame[-1]].value - 1 == number): 
+            if not(self.cardgames[whichgame[0]].value - 1 == listofcards[-1].value): 
+                return -1
+            else:
+                i = 0
+        else:
+            i = 1
 
         if i >= 0 :
             self.cardgames[whichgame][1] = clean
@@ -140,18 +172,33 @@ class BoardPlayer :
             score = self.scoreexistinggame(listofcards, whichgame, clean) #update score
 
             return score
+            
+
+    def add_to_board(self, listofcards : list[Card]) -> int:
+
+        n : int = len(listofcards)
+
+        list = Card.sequence(listofcards)
+
+        if list is None:
+            return 0
         
-        else :
-            print("Card's selection is not playable") 
+        listcards, jocker = list
 
+        listcards.append(jocker)    
 
-    def add_to_board(self, listofcards : list[Card], clean) -> int:
+        sequence,clean = Card.is_sequence(listcards)
 
-        if self.can_you_play(listofcards, clean):
+        if n>3:
             
             self.cardgames.append(listofcards,clean, 0)
             self.number_of_games += 1
             score : int = self.scorenewgame(listofcards, self.number_of_games - 1, clean)
 
             return score
+        
+        else:
+
+            return 0
+        
 

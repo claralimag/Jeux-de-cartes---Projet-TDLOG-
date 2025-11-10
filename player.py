@@ -1,6 +1,7 @@
 # Defined by a name, a list of cards, a board (BoardPlayer) and a score (functions : add card, move card, play a card (add to board - maybe exception?), change score)
 from cards import Card, Suit
 from boardplayer import BoardPlayer
+import boardgame
 
 
 class Player :
@@ -40,8 +41,9 @@ class Player :
         '''
         self.score += scorepoints
 
-    #Updates the player's board when the player chooses to play a new set of cards
-    def play_cards(self,listofcards : list[Card], whichgame : int) -> None:
+    #Updates the player's board when the player chooses to play a new set of cards belonging to his set
+
+    def play_cards(self, listofcards : list[Card], whichgame : int, trash : bool) -> int:
         '''
         input :
         listofcards : cards selected by the player 
@@ -49,19 +51,31 @@ class Player :
         on the contrary it will be bigger then the number of games in the table)
         
         '''
-        isclean : bool = True
-
-        #can you play ?
-        if not(Card.is_sequence(listofcards, isclean)):
-            print("Problem with selected sequence")
-
         if whichgame > self.board.number_of_games : 
-            newscore : int = self.board.add_to_existing_game(listofcards, whichgame, isclean)   #add to sequence of cards number whichgame listofcards, returns the new cards
+            newscore : int = self.board.add_to_existing_game(listofcards, whichgame)   #add to sequence of cards number whichgame listofcards, returns the new cards
             
         else:
-            newscore : int = self.board.add_to_board(listofcards, isclean)   #add to the board a new sequence : listofcards, return the new cards
+            newscore : int = self.board.add_to_board(listofcards)   #add to the board a new sequence : listofcards, return the new cards
                 
+        #can you play ?
+        if newscore == 0:
+            print("Problem with selected sequence")
+
         self.updatescore(newscore)
+
+        return newscore
+
+        
+    
+    def update_cards(self,listofcards) -> None:
+        for el in listofcards:
+                try:
+                    self.cards.remove(el)   
+                except ValueError:
+                    print(f"{el} is not in your deck")
+                    pass 
+                    
+
 
 
 

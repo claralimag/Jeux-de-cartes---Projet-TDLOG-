@@ -51,7 +51,7 @@ class Player :
         on the contrary it will be bigger then the number of games in the table)
         
         '''
-        if whichgame > self.board.number_of_games : 
+        if whichgame < self.board.number_of_games and whichgame > 0: 
             newscore : int = self.board.add_to_existing_game(listofcards, whichgame)   #add to sequence of cards number whichgame listofcards, returns the new cards
             
         else:

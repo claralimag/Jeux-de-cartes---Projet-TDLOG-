@@ -75,8 +75,13 @@ def cards_to_add(cards : list[Card], board : BoardPlayer):
                 
     return dico
                 
+
+
 def finds_seqs_by_color(cards : list[Card]):
-    
+    seqs = []
+    seqs0 = [cards[0]]
+    for i in range(1,len(cards)):
+        if cards[i] - cards[i-1] == 1: 
     
     
 def sequences(cards : list[Card])

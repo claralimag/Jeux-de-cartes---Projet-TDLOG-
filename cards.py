@@ -1,7 +1,7 @@
-
 from enum import Enum
+from typing import List
 
-# Cards : defines the Card class and related functions (enumerate ?) 
+# Cards : defines the Card class and related functions (enumerate ?)
 
 class Suit(Enum): #suit means "couleur" in french
     CLUBS = "clubs"
@@ -50,7 +50,8 @@ class Card:
     @staticmethod #si deux impurs cest false
     def is_sequence(card_list: list["Card"]) -> tuple[bool,bool,int]:
       """firt return bool says if card_list is a sequence,
-      second bool is True if it's a pure sequence """
+      second bool is True if it's a pure sequence, int is the
+      number un unpurities in the sequence """
       pure = True
       nb_unpure = 0
       for i in range(len(card_list)-1):
@@ -77,56 +78,285 @@ class Card:
       Donc toujours faire le test avec ace_at_the_end=False dabord
       """
     @staticmethod #on a le droit a UN SEUL joker et traiter l'ace
-    def order(card_list: list["Card"],ace_at_the_end=False) -> tuple[list["Card"],list["Card"]] | None:
-      #try two cases: ace comes before 2, or ace comes after king
-      #first case: if one comes before 2:
+    def order_v2(card_list: list["Card"]) -> list["Card"] | None:
+
+      if len(card_list)<3 or len(card_list)>14:
+        return None
+
       non_joker_list = [card for card in card_list if card.suit != Suit.JOKER and card.value != 2]
       joker_list     = [card for card in card_list if card.suit == Suit.JOKER or card.value == 2]  # jokers and twos
-      #check if there is a three?
-      if not all(card.suit == non_joker_list[0].suit for card in non_joker_list):
+
+      this_suit = non_joker_list[0].suit
+      print("this_suit: ",this_suit)
+
+      if not all(card.suit == this_suit for card in non_joker_list):
+        print("a")
         #if the cards have different suits, it's not orderable
         return None
+
+      nb_jokers_init = len(joker_list)
+      twos_list = [card for card in joker_list if card.suit == this_suit]
+      joker_list = [card for card in joker_list if card.suit != this_suit]
       ordered_list = sorted(non_joker_list, key=lambda e: e.value) #sort cards
-      if(ace_at_the_end):
-        if ordered_list[0].value == 1:
-          ordered_list.append(ordered_list.pop(0)) #put the 1 at the beginning
-        else:
-          False #because no ace
-      i = 0
+
+      #forbidden to have more than 2 jokers
+      if len(joker_list)> 2:
+        print("b")
+        return None
+      if len(joker_list)==1 and len(twos_list)>=2:
+        print("c")
+        #one of the twos would be used as a joker (forbidden)
+        return None
+
+      #dealing with small cases
+      if len(ordered_list) == 0:
+        print("d")
+        return None  #twos and jokers won't work (at least 3 cards)
+      if len(ordered_list)==1:
+        print("e")
+        #if there is only one card, we will need a two and
+        # a joker, and the only possibilities are:
+        #it is a one, and we check if we can play 1,2,joker
+        #it is a 3, and we check if we can play 2,3,joker (or joker,2,3)
+        #it is a 4, and we can play 2,joker,4
+        if len(twos_list) == 1 and nb_jokers_init == 2: #a two and a joker
+          print("f")
+          joker_card = joker_list.pop() if joker_list else twos_list.pop()
+          if ordered_list[0].value==1:
+            print("g")
+            return [ordered_list[0],twos_list.pop(),joker_card]
+          if ordered_list[0].value==3:
+            print("h")
+            return [twos_list.pop(),ordered_list.pop(),joker_card]
+          if ordered_list[0].value==4:
+            print("i")
+            return (twos_list.pop(),joker_card,ordered_list.pop())
+        #if we had one card and none if this worked, then it's a fail
+        return None
+
+      #now, there are at least two elements in ordered_list
+      # we seperate the aces to treat them at the end
+      aces = []
+      if ordered_list[0].value == 1: #if 1 ace
+        print("j")
+        aces.append(ordered_list.pop(0))
+      if ordered_list and ordered_list[0].value == 1: #if 2 aces
+        print("k")
+        aces.append(ordered_list.pop(0))
+      if ordered_list and ordered_list[0].value == 1: #if 3 aces: not orderable
+        print("l")
+        return None
+
+      #if there were two aces and ordered_list is empty, can't be ordered
+      if len(ordered_list) == 0:
+        print("m")
+        return None
+      if len(ordered_list) == 1:
+        print("n")
+        #we have 1 or 2 aces
+        if len(aces) == 2:
+          print("o")
+          return None
+        if len(aces)==1:
+          print("p")
+          #from [1] [2] [joker or 2] to [1,2,joker or 2]
+          if ordered_list[0].value == 2 and nb_jokers_init == 1:
+            joker_card = twos_list.pop() if twos_list else joker_list.pop()
+            ordered_list.insert(0,aces.pop())
+            ordered_list.append(joker_card)
+            return ordered_list
+          #from [1] [3] [joker or 2] to [1,joker or 2,3]
+          if ordered_list[0].value == 3 and nb_jokers_init == 1:
+            joker_card = twos_list.pop() if twos_list else joker_list.pop()
+            ordered_list.insert(0,joker_card)
+            ordered_list.insert(0,aces.pop())
+            return ordered_list
+          #from [1] [3] [2,joker] to [1,2,3,joker]
+          if ordered_list[0].value == 3 and nb_jokers_init==2:
+            ordered_list.insert(0,twos_list.pop())
+            ordered_list.insert(0,aces.pop())
+            joker_card = twos_list.pop() if twos_list else joker_list.pop()
+            ordered_list.append(joker_card)
+            return ordered_list
+          #from [1] [queen] [joker] to [queen,joker,1]
+          if ordered_list[0].value == 12 and nb_jokers_init == 1:
+            joker_card = twos_list.pop() if twos_list else joker_list.pop()
+            ordered_list.append(joker_card)
+            ordered_list.append(aces.pop())
+            return ordered_list
+          #from [1] [king] [joker] to [joker,king,1]
+          if ordered_list[0].value == 13 and nb_jokers_init == 1:
+            joker_card = twos_list.pop() if twos_list else joker_list.pop()
+            ordered_list.insert(0,joker_card)
+            ordered_list.append(aces.pop())
+            return ordered_list
+        #if we are in none of these cases with 1 card in orded list and 1 ace,
+        #then can't be ordered
+        return None
+
+      i = 0 #iterator for traking where we are in the list
       joker_used = False # tracker (only one joker allowed)
       while i < len(ordered_list)-1: #because ordered_list is going to evolve . -1? DOUBLE CHECK THIS WORKS IF I ADD ELEMENT AT THE LAST MOMENt
+        print("A")
         card1, card2 = ordered_list[i], ordered_list[i+1]
-        if Card.follows(card1,card2)[0]:
+        follows, pure_follows = Card.follows(card1,card2)
+
+        if pure_follows:
+          print("B")
           i+=1
-        else: #if the cards aren't consecutive
-          if card1.value == 1 and card2.value == 3: #in this case, we check if there is the 2 of the right color
-            found_two = False
-            two_index = None
-            #looking for two
-            for joker_index, joker_card in enumerate(joker_list):
-              if joker_card.suit == card1.suit: #if there is a two of the right color, we put it
-                found_two = True
-                two_index = joker_index
-                break
-            if found_two:
-              two_card = joker_list[two_index]
-              ordered_list.insert(i+1,joker_card) #we place the card right after card 1.
-              joker_list.pop(joker_index)
-              i += 1
-            else: #if not found two
-              if len(joker_list)==0 or joker_used: #is there are no jokers, or already used, list can't be ordered
+
+        elif follows:
+          print("C")
+          #in this case, card1 = a joker, card2 = not a joker.
+          #We need to check that we have value, joker, value+2
+          #print('the card values',ordered_list[i-1].value,card2.value)
+          if ordered_list[i-1].value+2 == card2.value:
+            i+=1
+            print("D")
+          else:
+            print("E")
+            return None
+
+        #now we treat the case where the cards aren't consecutive at all
+        else:
+          print("F")
+          #We check if we can add a two or a joker in the gap
+          if card1.value == 1 and card2.value == 3:
+            print("G")
+            if len(twos_list)>0:
+              print("H")
+              ordered_list.insert(i+1,twos_list.pop())
+              i+=1
+            #if we are not able to put a two
+            else:
+              print("I")
+              #is there are no jokers, or already used, list can't be ordered
+              if len(joker_list)+len(twos_list)==0 or joker_used:
+                print("J")
                 return None
+              #else, we play a joker
               joker_used = True
-              ordered_list.insert(i+1,joker_list.pop()) #in all the other cases, we just add a joker
+              joker_card = joker_list.pop() if joker_list else twos_list.pop()
+              ordered_list.insert(i+1,joker_card)
               i += 1
-          else: #if we are not between a 1 and a 3:
-            if len(joker_list)==0 or joker_used: #is there are no jokers, or already used, list can't be ordered
+          #case for when we are not between a 1 and a 3:
+          else:
+            print("K")
+            if len(joker_list)+len(twos_list)==0 or joker_used:
+              print("L")
               return None
             joker_used = True
-            ordered_list.insert(i+1,joker_list.pop()) #in all the other cases, we just add a joker
+            joker_card = joker_list.pop() if joker_list else twos_list.pop()
+            ordered_list.insert(i+1,joker_card)
             i += 1
-      return ordered_list, joker_list #joker_list might be empty
+      #now, if we have jokers or twos left:
+      #we check if we can add a natural 2
+      if ordered_list[0].value==3 and len(twos_list)>0:
+        print("M")
+        ordered_list.insert(0,twos_list.pop())
+      #now, we check if we don't have too many jokers
+      nb_jokers_left = len(twos_list)+len(joker_list)
+      if nb_jokers_left > 1:
+        print("N")
+        return None
 
+      # Now we need to check all the cases with the jokers and aces.
+      # Not hard but needs to be checked by hand.
+      if len(aces)==2:
+        print("O")
+        #from [2,...,13] to [1...13,1]:
+        if ordered_list[0].value == 2 and ordered_list[-1].value == 13 and nb_jokers_left == 0:
+          ordered_list.insert(0,aces.pop())
+          ordered_list.append(aces.pop())
+          return ordered_list
+        #from [3,...,12] [2,joker] to [1,2,3,...,12,joker,1]
+        if ordered_list[0].value == 3 and ordered_list[-1].value == 12 and nb_jokers_left == 2:
+          ordered_list.insert(0,twos_list.pop())
+          ordered_list.insert(0,aces.pop())
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.append(joker_card)
+          return ordered_list
+        #from [2,...,12], [2 or joker] to [1,2,...,12,2 or joker,1]
+        if ordered_list[0].value == 2 and ordered_list[-1].value == 12 and nb_jokers_left == 1:
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.insert(0,aces.pop())
+          ordered_list.append(joker_card)
+          ordered_list.append(aces.pop())
+          return ordered_list
+        #from [3,...,13] [2 or joker] to [1,2 or joker,3,...,13,1]
+        if ordered_list[0].value == 3 and ordered_list[-1].value == 13 and nb_jokers_left == 1:
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.append(aces.pop())
+          ordered_list.insert(0,joker_card)
+          ordered_list.insert(0,aces.pop())
+          return ordered_list
+      if len(aces)==1:
+        print("P")
+        #from [2,...,x(<=13)] to [1,2,...,x]
+        if ordered_list[0].value == 2 and nb_jokers_left == 0:
+          ordered_list.insert(0,aces.pop())
+          return ordered_list
+        #from [2,...x<13] [2 or joker] to [1,2,...x<13,2 or joker]
+        if ordered_list[0].value == 2 and ordered_list[-1].value < 13 and nb_jokers_left == 1:
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.insert(0,aces.pop())
+          ordered_list.append(joker_card)
+          return ordered_list
+        #from [3,...,x(<=13)] [2 or joker] to [1,2 or joker,3,...x]
+        if ordered_list[0].value == 3 and nb_jokers_left == 1:
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.insert(0,joker_card)
+          ordered_list.insert(0,aces.pop())
+          return ordered_list
+        #from [3,...,x<13] [2,joker] to [1,2,3,...,x<13,joker]
+        if ordered_list[0].value == 3 and ordered_list[-1].value < 13 and nb_jokers_left == 2:
+          ordered_list.insert(0,twos_list.pop())
+          ordered_list.insert(0,aces.pop())
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.append(joker_card)
+          return ordered_list
+        #from [x>=2,...,13] to [x>=2,...,13,1]
+        if ordered_list[-1].value == 13 and nb_jokers_left == 0:
+          ordered_list.append(aces.pop())
+          return ordered_list
+        #from [x>=2,...,13] [2 or joker] to [2 or joker,x,...,13,1]
+        if ordered_list[-1].value == 13 and nb_jokers_left == 1:
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.insert(0,joker_card)
+          ordered_list.append(aces.pop())
+          return ordered_list
+        #from [x>=2,...,12] [2 or joker] to [x,...12,2 or joker,1]
+        if ordered_list[-1].value == 12 and nb_jokers_left == 1:
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.append(joker_card)
+          ordered_list.append(aces.pop())
+          return ordered_list
+        #from [3,...,12] [2 , 2 or joker] to [2,3,...12,2 or joker,1]
+        if ordered_list[0].value == 3 and ordered_list[-1].value == 12 and nb_jokers_left == 2:
+          ordered_list.append(twos_list.pop())
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.append(joker_card)
+          ordered_list.append(aces.pop())
+          return ordered_list
 
-            
-
+      if len(aces)==0:
+        print("Q")
+        if nb_jokers_left == 0:
+          return ordered_list
+        #the only case we can use the 2 jokers left is if the 2 is natural
+        if ordered_list[0].value == 3 and nb_jokers_left == 2:
+          ordered_list.insert(0,twos_list.pop())
+          joker_card = twos_list.pop() if twos_list else joker_list.pop()
+          ordered_list.append(joker_card)
+          return ordered_list
+        #if there is one joker left, we either place it before 3 if its a two,
+        # or put it at the end
+        if nb_jokers_left == 1:
+          if ordered_list[0].value == 3 and len(twos_list) > 0:
+            ordered_list.insert(0,twos_list.pop())
+            return ordered_list
+          else:
+            joker_card = twos_list.pop() if twos_list else joker_list.pop()
+            ordered_list.append(joker_card)
+            return ordered_list
+      return None

@@ -1,7 +1,9 @@
 # Defined by a name, a list of cards, a board (BoardPlayer) and a score (functions : add card, move card, play a card (add to board - maybe exception?), change score)
-from cards import Card, Suit
+from cards import Card, Suit, orderedCards
 from boardplayer import BoardPlayer
 import boardgame
+import cards
+import random
 
 
 class Player :
@@ -78,5 +80,106 @@ class Player :
 
 
 
+class Robot(Player):
+    def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
+        super().__init__(name0, cards0, board0, score0)
 
+    
+    def play_a_card(self, whichplayer :int) -> None :
+        '''
+        input : 
+        whichplayer : int representing the number of the player in the game
+        
+        Looks if we can play a card on the board and play a it if possible
 
+        output : 
+        None
+        
+        '''
+        card0 = self.Robot.cards[0]
+
+        deck = self.board.cardgames
+
+        n = len(self.cards)
+
+        i = 0
+
+        while i<n:
+            for j in range(len(deck)):
+
+                cards, is_pure, points = deck[j]
+
+                if orderedCards(cards + [card0]):    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
+                    self.play_a_cards([card0], j, False)
+                    self.update_cards([card0])
+                    i = 0  #restart from the beginning
+
+                else:
+                    i+=1
+
+                card0 = self.cards[i]
+        
+
+        def three_sequence_possible(self) -> bool:
+            '''
+            input : 
+            None
+            
+            Looks if we can play a sequence of at least 3 cards on the board
+
+            output : 
+            bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
+            
+            '''
+            n = len(self.cards)
+
+            bool = False
+
+            if n<3:
+                return False
+
+            ordered_cards = cards.Card.order(self.cards) #je suppose que cards.Card.order ordonne les cartes
+
+            cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
+            cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
+            cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
+            cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+
+            for color_cards in [cards_heart, cards_diamond, cards_club, cards_spade]:
+                while len(color_cards) >= 3:
+                    m = len(color_cards)
+                    i = 0
+                    while i < m - 3:
+                        sub_sequence = color_cards[i:i+3]
+                        if cards.Card.OrderedCards(sub_sequence):
+                                color_cards.pop(i)
+                                color_cards.pop(i+1)
+                                color_cards.pop(i+2)
+                                self.play_cards(sub_sequence, -1, False)
+                                self.update_cards(sub_sequence)
+                                i = 0  # restart from the beginning
+                                m -= 3
+                                bool = True
+                        else:
+                            i += 1
+
+            return bool
+       
+        def robot_play_cards_easy(self, whichplayer : int) -> Card:
+            # input : Player representing the computer
+            # output : Card to trow out in the trash 
+            # If the robot can play cards, it plays them: even if its a jocker or if its not optimal
+        
+            self.play_a_card(whichplayer) #robot plays a card if possible
+
+            self.three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
+
+            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+
+            #Throw out a random card:
+            n = len(self.cards)
+            
+            i = random.randint(0,n)
+            
+            return self.cards[i]
+        

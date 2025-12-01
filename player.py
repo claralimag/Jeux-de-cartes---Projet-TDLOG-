@@ -84,7 +84,7 @@ class Robot(Player):
     def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
         super().__init__(name0, cards0, board0, score0)
 
-    
+
     def play_a_card(self, whichplayer :int) -> None :
         '''
         input : 
@@ -96,7 +96,7 @@ class Robot(Player):
         None
         
         '''
-        card0 = self.Robot.cards[0]
+        card0 = self.cards[0]
 
         deck = self.board.cardgames
 
@@ -165,12 +165,13 @@ class Robot(Player):
 
             return board_changed
     
+
     def jocker_three_sequence_possible(self) -> bool:
         '''
             input : 
             None
             
-            Looks if we can play a sequence of at least 3 cards on the board : same color, in order, no jocker
+            Looks if we can play a sequence of at least 3 cards on the board with a jocker
 
             output : 
             bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
@@ -191,7 +192,6 @@ class Robot(Player):
         cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
 
         jockers = [card for card in ordered_cards if card.suit == Suit.JOKER]
-        twos = [card for card in ordered_cards if card.value == 2]
 
         cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
 
@@ -205,8 +205,9 @@ class Robot(Player):
                     if Card.three_cards_with_jocker(jockers[0],sub_sequence):
                         color_cards.pop(i)
                         color_cards.pop(i+1)
+                        jockers.pop(0)
                         self.play_cards(sub_sequence, -1, False)
-                        self.update_cards(sub_sequence)
+                        self.update_cards(sub_sequence + [jockers[0]])
                         i = 0  # restart from the beginning
                         m -= 2
                         board_changed = True
@@ -216,8 +217,124 @@ class Robot(Player):
         return board_changed    
 
 
+    def two_as_a_jocker_same_colors_sequence_possible(self) -> bool:
+        '''
+        input : 
+        None
+            
+        Looks if we can play a sequence of at least 3 cards on the board with a two as a jocker
+
+        output : 
+                    
+        bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
+            
+        '''
+
+        n = len(self.cards)
+        
+        board_changed = False
+
+        if n<3:
+            return False
+
+        ordered_cards = Card.ordercards(self.cards) 
+    
+        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
+        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
+        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
+        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+
+        cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
+        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        
+        #two as a jocker of the same color
+        for color_cards in cards_by_color:
+            twos = [card for card in color_cards if card.value == 2]
+            while len(color_cards) >= 2 and len(twos) > 0:
+                m = len(color_cards)
+                i = 0
+                while i < m - 2:
+                    sub_sequence = color_cards[i:i+2] 
+
+                    if Card.three_cards_with_jocker(twos[0],sub_sequence) and ((not(sub_sequence[0].value == 2) and not(sub_sequence[1].value == 2)) or (sub_sequence[0].value == 2 and not(sub_sequence[1].value == 2) and len(twos) >=2) or (sub_sequence[1].value == 2 and not(sub_sequence[0].value == 2) and len(twos) >=2)):
+                        color_cards.pop(i)
+                        color_cards.pop(i)
+                        twos.pop(0)
+                        self.play_cards(sub_sequence, -1, False)
+                        self.update_cards(sub_sequence + [twos[0]])
+                        i = 0  # restart from the beginning
+                        m -= 2
+                        board_changed = True
+                    else:
+                        i += 1
+
+        return board_changed    
+    
+
+    def two_as_a_jocker_diff_colors_sequence_possible(self) -> bool:
+        '''
+        input : 
+        None
+            
+        Looks if we can play a sequence of at least 3 cards on the board with a two as a jocker of different colors
+
+        output : 
+                    
+        bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
+            
+        '''
+
+        n = len(self.cards)
+        
+        board_changed = False
+
+        if n<3:
+            return False
+
+        ordered_cards = Card.ordercards(self.cards) 
+    
+        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
+        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
+        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
+        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+
+        cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
+        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        
+        #two as a jocker of the same color
+        for color_cards in cards_by_color:
+            twos = [card for card in color_cards if card.value == 2 and not(card.suit == color_cards[0].suit)]
+            while len(color_cards) >= 2 and len(twos) > 0:
+                m = len(color_cards)
+                i = 0
+                while i < m - 2:
+                    sub_sequence = color_cards[i:i+2] 
+
+                    if Card.three_cards_with_jocker(twos[0],sub_sequence):
+                        color_cards.pop(i)
+                        twos.pop(0)
+                        self.play_cards(sub_sequence, -1, False)
+                        self.update_cards(sub_sequence + [twos[0]])
+                        i = 0  # restart from the beginning
+                        m -= 2
+                        board_changed = True
+                    else:
+                        i += 1
+
+        return board_changed    
+    
+
+    def robot_play(self,whichgame) -> Card:
+        pass
+
+
+#Both Easy and Easy Medium robots have a similar behavior when playing cards : they don't take into account the optimality of their plays at the long run
+class RobotEasy(Robot):
+    def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
+        super().__init__(name0, cards0, board0, score0)
        
-    def robot_play_cards_easy(self, whichplayer : int) -> Card:
+    
+    def robot_play(self, whichplayer : int) -> Card:
         # input : Player representing the computer
         # output : Card to trow out in the trash 
         # If the robot can play cards, it plays them: even if its not optimal and it can only play a jocker if adding to an existing sequence
@@ -235,4 +352,109 @@ class Robot(Player):
         i = random.randint(0,n-1)
         
         return self.cards[i]
+
+
+#Easy medium robots however deal better with jockers and twos as jokers than easy robots
+class RobotEasyMedium(Robot):
+    def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
+        super().__init__(name0, cards0, board0, score0)
+       
+    #we need to change play a card : It shouldn't just play a jocker
+    def play_a_card(self, whichplayer):
+        '''
+        input : 
+        whichplayer : int representing the number of the player in the game
+        Looks if we can play a card on the board and play it if possible
+        output : 
+        None
+        '''
+        card0 = self.cards[0]
+
+        deck = self.board.cardgames
+
+        n = len(self.cards)
+
+        i = 0
+
+        while i<n:
+            for j in range(len(deck)):
+
+                cards, is_pure, points = deck[j]
+
+                if Card.card_to_game(cards + [card0]) and card0.suit != Suit.JOKER:   
+                    self.play_cards([card0], j, False)
+                    self.update_cards([card0])
+                    i = 0  #restart from the beginning
+
+                else:
+                    i+=1
+
+                card0 = self.cards[i]
+
+    def play_a_card_with_jocker(self, whichplayer):
+        '''
+        input : 
+        whichplayer : int representing the number of the player in the game
+        Looks if we can play a card on the board and play it if possible
+        output : 
+        None
+        '''
+        card0 = self.cards[0]
+
+        deck = self.board.cardgames
+
+        n = len(self.cards)
+
+        i = 0
+
+        while i<n:
+            for j in range(len(deck)):
+
+                cards, is_pure, points = deck[j]
+
+                if Card.card_to_game(cards + [card0]):    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
+                    self.play_cards([card0], j, False)
+                    self.update_cards([card0])
+                    i = 0  #restart from the beginning
+
+                else:
+                    i+=1
+
+                card0 = self.cards[i]
+    
+    def robot_play(self, whichplayer : int) -> Card:
+        # input : Player representing the computer
+        # output : Card to trow out in the trash 
+        # If the robot can play cards, it plays them: even if its not optimal and it can only play a jocker if adding to an existing sequence
+        
+        self.play_a_card(whichplayer) #robot plays a card if possible
+
+        board_changed = self.clean_three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
+        
+        if board_changed:
+            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+
+        board_changed = self.jocker_three_sequence_possible() #robot plays a sequence of at least 3 cards with a jocker if possible
+        
+        if board_changed:
+            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+
+        board_changed = self.two_as_a_jocker_same_colors_sequence_possible() #robot plays a sequence of at least 3 cards with a two as a jocker of same color if possible
+        
+        if board_changed:
+            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+
+        board_changed = self.two_as_a_jocker_diff_colors_sequence_possible() #robot plays a sequence of at least 3 cards with a two as a jocker of different colors if possible
+        
+        if board_changed:
+            self.play_a_card_with_jocker(whichplayer) #robot adds cards to existing sequences if possible
+
+        #Throw out a random card:
+        n = len(self.cards)
+            
+        i = random.randint(0,n-1)
+        
+        return self.cards[i]
+    
+    
         

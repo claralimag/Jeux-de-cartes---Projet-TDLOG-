@@ -70,12 +70,7 @@ class Card:
       """
       Cette fonction prend en entrée une liste de carte. Si cette liste ne peut
       pas former une suite, la fonction renvoie none. Si elle peut former une
-      suite, elle renvoie la liste ordonnée, avec la liste des jokers et/ou deux
-      s'il en reste (à choisir où il faut les mettre). Elle a un parametre
-      booléen ace_at_the_end qui permet de considérer le cas où l'on met l'ace à
-      la fin, après le roi, ou avant le 2. Si ace_at_the end = True mais qu'il
-      n'y a pas d'ace, on return False (pour le pas faire le test deux fois).
-      Donc toujours faire le test avec ace_at_the_end=False dabord
+      suite, elle renvoie la liste ordonnée
       """
     @staticmethod #on a le droit a UN SEUL joker et traiter l'ace
     def order(card_list: list["Card"]) -> list["Card"] | None:

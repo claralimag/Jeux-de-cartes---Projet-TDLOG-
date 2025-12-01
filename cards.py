@@ -112,6 +112,21 @@ class Card:
             
         return False
     
+    @staticmethod
+    def three_cards_with_jocker(card : "Card", cards_list : list["Card"]) -> bool:
+      cards_list = sorted(cards_list, key=lambda e: e.value)
+
+      assert len(cards_list) == 2
+      assert card.suit == Suit.JOKER or card.value == 2
+
+      if cards_list[1].value - cards_list[0].value == 2:
+          return True
+      
+      if cards_list[0].value == 1 and cards_list[1].value == 12:
+          return True
+      
+      return False 
+    
       """
       Cette fonction prend en entrée une liste de carte. Si cette liste ne peut
       pas former une suite, la fonction renvoie none. Si elle peut former une

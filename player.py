@@ -109,7 +109,7 @@ class Robot(Player):
 
                 cards, is_pure, points = deck[j]
 
-                if Card.order(cards + [card0]):    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
+                if Card.card_to_game(cards + [card0]):    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
                     self.play_cards([card0], j, False)
                     self.update_cards([card0])
                     i = 0  #restart from the beginning
@@ -125,7 +125,7 @@ class Robot(Player):
             input : 
             None
             
-            Looks if we can play a sequence of at least 3 cards on the board : same color, in order
+            Looks if we can play a sequence of at least 3 cards on the board : same color, in order, no jocker
 
             output : 
             bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
@@ -164,6 +164,58 @@ class Robot(Player):
                             i += 1
 
             return board_changed
+    
+    def jocker_three_sequence_possible(self) -> bool:
+        '''
+            input : 
+            None
+            
+            Looks if we can play a sequence of at least 3 cards on the board : same color, in order, no jocker
+
+            output : 
+            bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
+            
+            '''
+        n = len(self.cards)
+        
+        board_changed = False
+
+        if n<3:
+            return False
+
+        ordered_cards = Card.ordercards(self.cards) #je suppose que cards.Card.order ordonne les cartes
+
+        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
+        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
+        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
+        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+
+        jockers = [card for card in ordered_cards if card.suit == Suit.JOKER]
+        twos = [card for card in ordered_cards if card.value == 2]
+
+        cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
+
+        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        for color_cards in cards_by_color:
+            while len(color_cards) >= 2 and len(jockers) > 0:
+                m = len(color_cards)
+                i = 0
+                while i < m - 3:
+                    sub_sequence = color_cards[i:i+2] 
+                    if Card.three_cards_with_jocker(jockers[0],sub_sequence):
+                        color_cards.pop(i)
+                        color_cards.pop(i+1)
+                        self.play_cards(sub_sequence, -1, False)
+                        self.update_cards(sub_sequence)
+                        i = 0  # restart from the beginning
+                        m -= 2
+                        board_changed = True
+                    else:
+                        i += 1
+
+        return board_changed    
+
+
        
     def robot_play_cards_easy(self, whichplayer : int) -> Card:
         # input : Player representing the computer

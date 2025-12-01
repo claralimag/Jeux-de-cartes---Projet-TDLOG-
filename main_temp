@@ -1,0 +1,100 @@
+import player
+import boardplayer
+import boardgame
+
+def get_choice(prompt, max_val):
+    while True:
+        try:
+            val = int(input(prompt))
+            if 0 <= val <= max_val:
+                return val
+        except ValueError:
+            pass
+        print("Entrée invalide.")
+
+def play():
+    print("--- BURACO CONSOLE ---")
+    nom1 = input("Nom J1: ")
+    nom2 = input("Nom J2: ")
+
+    bp1 = boardplayer.BoardPlayer()
+    bp2 = boardplayer.BoardPlayer()
+    p1 = player.Player(nom1, [], bp1, 0)
+    p2 = player.Player(nom2, [], bp2, 0)
+
+    game = boardgame.BoardGame([p1, p2], open=True)
+
+    
+    game.setup_game()
+
+    curr_idx = 0
+
+    while True:
+        curr_p = game.players[curr_idx]
+        print(f"\n\n>>> C'EST A {curr_p.name.upper()} <<<")
+
+        game.display_state()
+        curr_p.show_hand()
+
+        # 1. PIOCHE
+        print("1: Deck | 2: Ramasser Défausse")
+        choix = get_choice("Choix: ", 2)
+
+        if choix == 2 and game.discard_pile:
+            picked = game.draw_from_discard_pile(curr_idx)
+            print(f"Vous avez ramassé {len(picked)} cartes.")
+        else:
+            card = game.draw_from_deck()
+            if card is None:
+                print("Plus de cartes ! Fin du jeu.")
+                break
+            curr_p.add_card(card)
+            print(f"Pioché : {card}")
+
+        curr_p.show_hand()
+
+        # 2. ACTIONS
+        while True: #revoir la condition d'arrêt
+            print("Actions: 0: Finir tour (Défausser) | 1: Poser un nouveau jeu | 2: Compléter un jeu")
+            act = get_choice("Action: ", 2)
+
+            if act == 0:
+                break
+
+            print("Entrez les indices des cartes à jouer (ex: 0 1 2) séparés par espace:")
+            try:
+                indexes = list(map(int, input("> ").split()))
+                cards_to_play = [curr_p.cards[i] for i in indexes if 0 <= i < len(curr_p.cards)]
+
+                if not cards_to_play:
+                    print("Aucune carte valide sélectionnée.")
+                    continue
+
+                if act == 1:
+                    res = curr_p.play_cards(cards_to_play, 999, False)
+                elif act == 2:
+                    game_id = int(input("Quel numéro de jeu compléter ? "))
+                    res = curr_p.play_cards(cards_to_play, game_id, False)
+
+                if res > 0:
+                    print("Succès !")
+                    curr_p.show_hand()
+                else:
+                    print("Combinaison invalide.")
+
+            except (ValueError, IndexError):
+                print("Erreur de saisie.")
+
+        # 3. DEFAUSSE
+        print("Choisissez l'index de la carte à défausser:")
+        idx = get_choice("> ", len(curr_p.cards)-1)
+
+        c = curr_p.cards[idx]
+        curr_p.update_cards([c])
+        game.add_to_discard(c)
+        print(f"Défaussé: {c}")
+
+        curr_idx = game.next_player_index(curr_idx)
+
+if __name__ == "__main__":
+    play()

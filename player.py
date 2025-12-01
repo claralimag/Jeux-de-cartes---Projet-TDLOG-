@@ -119,13 +119,13 @@ class Robot(Player):
 
                 card0 = self.cards[i]
         
-
-        def three_sequence_possible(self) -> bool:
+            
+    def clean_three_sequence_possible(self) -> bool:
             '''
             input : 
             None
             
-            Looks if we can play a sequence of at least 3 cards on the board
+            Looks if we can play a sequence of at least 3 cards on the board : same color, in order
 
             output : 
             bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
@@ -133,7 +133,7 @@ class Robot(Player):
             '''
             n = len(self.cards)
 
-            bool = False
+            board_changed = False
 
             if n<3:
                 return False
@@ -159,27 +159,28 @@ class Robot(Player):
                                 self.update_cards(sub_sequence)
                                 i = 0  # restart from the beginning
                                 m -= 3
-                                bool = True
+                                board_changed = True
                         else:
                             i += 1
 
-            return bool
+            return board_changed
        
-        def robot_play_cards_easy(self, whichplayer : int) -> Card:
-            # input : Player representing the computer
-            # output : Card to trow out in the trash 
-            # If the robot can play cards, it plays them: even if its a jocker or if its not optimal
+    def robot_play_cards_easy(self, whichplayer : int) -> Card:
+        # input : Player representing the computer
+        # output : Card to trow out in the trash 
+        # If the robot can play cards, it plays them: even if its not optimal and it can only play a jocker if adding to an existing sequence
         
-            self.play_a_card(whichplayer) #robot plays a card if possible
+        self.play_a_card(whichplayer) #robot plays a card if possible
 
-            self.three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
-
+        board_changed = self.clean_three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
+        
+        if board_changed:
             self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
 
-            #Throw out a random card:
-            n = len(self.cards)
+        #Throw out a random card:
+        n = len(self.cards)
             
-            i = random.randint(0,n)
-            
-            return self.cards[i]
+        i = random.randint(0,n-1)
+        
+        return self.cards[i]
         

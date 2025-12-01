@@ -81,7 +81,37 @@ class Card:
 
       return heart_list_sorted + diamond_list_sorted + club_list_sorted + spade_list_sorted + joker_list
 
+    @staticmethod
+    def card_to_game(card: "Card", cards : list["Card"], is_pure: bool) -> bool:
+        '''
+        input : 
+        card : Card to test
+        cards : list of Card representing a game on the board
+        is_pure : bool representing if the game is pure or not
+        
+        Looks if we can play the card on the game
 
+        output : 
+        bool : True if we can play the card on the game, False otherwise
+        
+        '''
+        begin = cards[0]
+        end = cards[-1]
+
+        if card.suit == Suit.JOKER:
+            return is_pure
+            
+        if card.suit != begin.suit:
+            return False
+            
+        if card.value == begin.value - 1 or card.value == end.value + 1:
+            return True
+            
+        if card.value == 1 and end.value == 13:
+            return True
+            
+        return False
+    
       """
       Cette fonction prend en entrée une liste de carte. Si cette liste ne peut
       pas former une suite, la fonction renvoie none. Si elle peut former une

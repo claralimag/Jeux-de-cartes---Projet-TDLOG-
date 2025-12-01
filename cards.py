@@ -64,7 +64,22 @@ class Card:
           return False
         return True,pure ,nb_unpure
 
+    @staticmethod
+    def ordercards(card_list: list["Card"]) -> list["Card"] | None:
+      joker_list     = [card for card in card_list if card.suit == Suit.JOKER]  # jokers
 
+      heart_list = [card for card in card_list if card.suit == Suit.HEART]
+      diamond_list = [card for card in card_list if card.suit == Suit.DIAMOND]
+      club_list = [card for card in card_list if card.suit == Suit.CLUB]
+      spade_list = [card for card in card_list if card.suit == Suit.SPADE]
+
+      #sort cards by suit
+      heart_list_sorted = sorted(heart_list, key=lambda e: e.value)
+      diamond_list_sorted = sorted(diamond_list, key=lambda e: e.value)
+      club_list_sorted = sorted(club_list, key=lambda e: e.value)
+      spade_list_sorted = sorted(spade_list, key=lambda e: e.value)
+
+      return heart_list_sorted + diamond_list_sorted + club_list_sorted + spade_list_sorted + joker_list
 
 
       """

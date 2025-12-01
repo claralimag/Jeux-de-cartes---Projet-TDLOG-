@@ -90,7 +90,7 @@ class Robot(Player):
         input : 
         whichplayer : int representing the number of the player in the game
         
-        Looks if we can play a card on the board and play a it if possible
+        Looks if we can play a card on the board and play it if possible
 
         output : 
         None
@@ -109,8 +109,8 @@ class Robot(Player):
 
                 cards, is_pure, points = deck[j]
 
-                if orderedCards(cards + [card0]):    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
-                    self.play_a_cards([card0], j, False)
+                if Card.order(cards + [card0]):    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
+                    self.play_cards([card0], j, False)
                     self.update_cards([card0])
                     i = 0  #restart from the beginning
 
@@ -138,7 +138,7 @@ class Robot(Player):
             if n<3:
                 return False
 
-            ordered_cards = cards.Card.order(self.cards) #je suppose que cards.Card.order ordonne les cartes
+            ordered_cards = Card.ordercards(self.cards) #je suppose que cards.Card.order ordonne les cartes
 
             cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
             cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
@@ -151,7 +151,7 @@ class Robot(Player):
                     i = 0
                     while i < m - 3:
                         sub_sequence = color_cards[i:i+3]
-                        if cards.Card.OrderedCards(sub_sequence):
+                        if Card.order(sub_sequence):
                                 color_cards.pop(i)
                                 color_cards.pop(i+1)
                                 color_cards.pop(i+2)

@@ -1,7 +1,6 @@
 # BoardGame : defines the board of the game (players, deck, discard pile, functions : add player, remove player, draw card from deck, draw card from discard pile, add card to discard pile)
 import random
 from player import Player
-from rules import Rules
 from cards import Card, Suit
 
 
@@ -56,7 +55,7 @@ class BoardGame:
         self.discard_pile.append(card)
 
     # Distribution initiale et gestion du tour
-    def setup_game(self, rules: Rules):
+    def setup_game(self):
         """Crée le jeu, mélange les cartes et distribue aux joueurs"""
         # Création du paquet (2x52 + jokers)
         from cards import Card, Suit
@@ -75,7 +74,7 @@ class BoardGame:
         pot_2 : list[Card] = []
 
         # Distribuer 11 cartes à chaque joueur
-        for _ in range(rules.cards_per_player):
+        for _ in range(11):
             el1 = random.randint(0,len(self.deck))
             pot_1.append(self.deck(el1))
             self.deck.pop(el1)

@@ -67,7 +67,11 @@ class Player :
 
         return newscore
 
-        
+    def show_hand(self) -> None:
+        print("Votre main :")
+        for idx, card in enumerate(self.cards):
+            print(f"{idx}: {card}")
+            
     
     def update_cards(self,listofcards) -> None:
         for el in listofcards:
@@ -84,6 +88,14 @@ class Robot(Player):
     def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
         super().__init__(name0, cards0, board0, score0)
 
+    def robot_pick_cards(self, whichplayer : int, discard_pile: list[Card], open : bool) -> None:
+        """
+        input : int representing the number of the player in the game
+        Looks if we can pick cards from the trash
+        output : True if we can pick cards from the trash, False otherwise
+
+        """
+        pass 
 
     def play_a_card(self, whichplayer :int) -> None :
         '''
@@ -333,7 +345,20 @@ class RobotEasy(Robot):
     def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
         super().__init__(name0, cards0, board0, score0)
        
-    
+    def robot_pick_cards(self, whichplayer : int, discard_pile: list[Card], open : bool) -> None:
+        """
+        input : int representing the number of the player in the game
+        Looks if we can pick cards from the trash : if trash has at least 3 cards, we pick it
+        output : True if we can pick cards from the trash, False otherwise
+
+        """
+        if len(discard_pile) >= 3 and open:
+            self.add_card(discard_pile)
+            return True
+        else:
+            return False
+        
+
     def robot_play(self, whichplayer : int) -> Card:
         # input : Player representing the computer
         # output : Card to trow out in the trash 

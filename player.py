@@ -1,5 +1,5 @@
 # Defined by a name, a list of cards, a board (BoardPlayer) and a score (functions : add card, move card, play a card (add to board - maybe exception?), change score)
-from cards import Card, Suit, orderedCards
+from cards import Card, Suit
 from boardplayer import BoardPlayer
 import boardgame
 import cards
@@ -7,81 +7,101 @@ import random
 
 
 class Player :
-    def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
-        name : str = name0
-        board : BoardPlayer = board0
-        score: int = score0
-        cards : list[Card] = cards0
+    def __init__(self, name: str, cards: List["Card"], board: "BoardPlayer", score: int = 0) -> None:
+            """
+            Initialize a player.
+
+            :param name: Player's name
+            :param cards: Initial hand (list of Card objects)
+            :param board: Player's personal board (BoardPlayer instance)
+            :param score: Initial score (default 0)
+            """
+            self.name = name
+            self.cards = cards
+            self.board = board
+            self.score = score
 
 
-    #The next functions are usefull when the player gets a new card 
-    #This is usefull when the player chooses to draw a card
-    def add_card(self, card : Card) -> None:
-        '''
-        input :
-        card : card that was drawed by the player 
+    # ---------- Hand management (drawing / taking from discard pile) ----------
+
+    def add_card(self, card: "Card") -> None:
+        """
+        Add a single card to the player's hand (normal draw).
+
+        :param card: Card that was drawn by the player
+        """
+        self.cards.append(card)
+
+    def add_cards(self, cards: List["Card"]) -> None:
+        """
+        Add multiple cards to the player's hand (e.g. taking the discard pile).
+
+        :param cards: Cards that were taken by the player
+        """
+        self.cards.extend(cards)
         
-        '''
-        self.cards.append(Card)
-    
-    #This is usefull when the player chooses to pick up the trash
-    def add_card(self, listofcards : list[Card])-> None:
-        '''
-        input :
-        listofcards : cards that were drawed by the player when they picked up the trash
-        
-        '''
-        for el in listofcards:
-            self.cards.append(el)
-        
-    #Updates the score when the player chooses to play a new set of cards
-    def updatescore(self,scorepoints : int) -> None:
-        '''
-        input :
-        scorepoints : new score won by the player 
-        
-        '''
+    # ---------- Score management ----------
+    def update_score(self, scorepoints: int) -> None:
+        """
+        Update the player's score.
+
+        :param scorepoints: Points to add to the current score
+        """
         self.score += scorepoints
+
 
     #Updates the player's board when the player chooses to play a new set of cards belonging to his set
 
-    def play_cards(self, listofcards : list[Card], whichgame : int, trash : bool) -> int:
-        '''
-        input :
-        listofcards : cards selected by the player 
-        whichgame : game selected by the player (if he selected,
-        on the contrary it will be bigger then the number of games in the table)
-        
-        '''
-        if whichgame < self.board.number_of_games and whichgame > 0: 
-            newscore : int = self.board.add_to_existing_game(listofcards, whichgame)   #add to sequence of cards number whichgame listofcards, returns the new cards
-            
-        else:
-            newscore : int = self.board.add_to_board(listofcards)   #add to the board a new sequence : listofcards, return the new cards
-                
-        #can you play ?
-        if newscore == 0:
-            print("Problem with selected sequence")
+     # ---------- Playing cards on the board ----------
 
-        self.updatescore(newscore)
+    def play_cards(self, cards_to_play: List["Card"], game_index: int, from_trash: bool = False) -> int:
+        """
+        Play a set of cards on the player's board.
+
+        :param cards_to_play: Cards selected by the player
+        :param game_index: Index of the game/sequence chosen by the player.
+                           If 0 <= game_index < board.number_of_games, we add to an existing game.
+                           Otherwise, we create a new game on the board.
+        :param from_trash: True if these cards come from the discard pile (not used yet, useful later)
+        :return: Points earned by playing these cards (0 if invalid move)
+        """
+
+        # Add cards to player's board
+        newscore = self.board.add_to_existing_game(cards_to_play, game_index)
+        
+        # Check if the move is valid
+        if newscore == 0:
+            raise ValueError
+
+        # Update score and remove cards from the player's hand
+        self.update_score(newscore)
+        self.update_cards(cards_to_play)
 
         return newscore
 
     def show_hand(self) -> None:
-        print("Votre main :")
+        """
+        Print the player's hand with indices.
+        """
+        print(f"Hand of {self.name}:")
         for idx, card in enumerate(self.cards):
             print(f"{idx}: {card}")
-            
-    
-    def update_cards(self,listofcards) -> None:
-        for el in listofcards:
-                try:
-                    self.cards.remove(el)   
-                except ValueError:
-                    print(f"{el} is not in your deck")
-                    pass 
-                    
 
+    
+    def update_cards(self, cards_to_remove: List["Card"]) -> None:
+        """
+        Remove a list of cards from the player's hand (after playing them).
+
+        :param cards_to_remove: Cards that should be removed from the hand
+        """
+        for el in cards_to_remove:
+            try:
+                self.cards.remove(el)
+            except ValueError:
+                print(f"{el} is not in your hand")
+                # Ignore and continue
+                pass
+                    
 
 
 class Robot(Player):

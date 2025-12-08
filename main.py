@@ -1,9 +1,7 @@
-import player
-import cards
 import boardplayer as bp 
 import boardgame as bg
 from cards import Card, Suit
-from player import Player, Robot
+from player import Player, Robot, RobotEasy
 from boardplayer import BoardPlayer
 from boardgame import BoardGame 
 from random import randint
@@ -59,11 +57,13 @@ def play(player1 : Player, player2 : Player):
 
         if isinstance(game.players[curr_idx], Robot):
                 # 1. PIOCHE
-                picked_cards = curr_p.robot_pick_cards(curr_idx, game.discard_pile, game.is_open)
+                picked_cards = curr_p.robot_pick_cards(curr_idx, game.discard_pile, game.is_open) #True if we pick cards from the trash
 
                 if picked_cards:
-                        game.draw_from_discard(curr_idx)
+                        cards = game.draw_from_discard(curr_idx)
                         print(f"Le robot a ramassé {len(picked_cards)} cartes.")
+                        curr_p.add_cards(cards)
+
                 else :
                         card = game.draw_from_deck()
                         if card is None:
@@ -75,7 +75,7 @@ def play(player1 : Player, player2 : Player):
                 # 2. ACTIONS
                 card_to_throw = curr_p.robot_play(curr_idx)
                 game.add_to_discard(card_to_throw)
-                curr_p.remove_card(card_to_throw)
+                curr_p.update_cards([card_to_throw])
                 print(f"Le robot a défaussé : {card_to_throw}")
 
         else:
@@ -87,6 +87,7 @@ def play(player1 : Player, player2 : Player):
                 if choix == 1 and game.discard_pile:
                         picked = game.draw_from_discard(curr_idx)
                         print(f"Vous avez ramassé {len(picked)} cartes.")
+                        curr_p.add_cards(picked)
                 
                 else:
                         card = game.draw_from_deck()
@@ -100,13 +101,12 @@ def play(player1 : Player, player2 : Player):
 
                 # 2. ACTIONS
                 # stopping condition: 
-                i = 2
+
+                print("Actions: 0: Finir tour (Défausser) | 1: Poser un nouveau jeu | 2: Compléter un jeu")
+                i = get_choice("Action: ", 2)
 
                 while i > 0: 
-                        print("Actions: 0: Finir tour (Défausser) | 1: Poser un nouveau jeu | 2: Compléter un jeu")
-                        i = get_choice("Action: ", 2)
-        
-                        print("Entrez les indices des cartes à jouer (ex: 0 1 2) séparés par espace:")
+                        print("Entrez les indices des cartes à jouer (ex: 0 1 2) séparés par espace et le jeu auquel tu souhaites ajouter (si c'est le cas):")
                         try:
                                 selected_cards, whichgame = input_cards()
                                 indexes = list(map(int, input("> ").split()))
@@ -137,9 +137,10 @@ def play(player1 : Player, player2 : Player):
 # Il faut regarder des stratégies plus complexes pour le robot (piocher dans la défausse seulement si ça l'aide à compléter un jeu, etc.)
 # Il faut implémenter dans la deuxième partie la gestion des pots (vérifier si un joueur a vidé son boardplayer, distribuer les points des pots, etc.)
 # Une fois ceci-fait il faut vérifier que les règles sont bien respectées: on ne peut finir que avec une canasta, etc.
+# Traiter l'exception dans play_cards
 
 if __name__ == "__main__":
     p1 = Player("Alice", [], bp.BoardPlayer(), 0)
-    p2 = Robot("Bot", [], bp.BoardPlayer(), 0)
+    p2 = RobotEasy("Bot", [], bp.BoardPlayer(), 0)
     play(p1, p2)
     

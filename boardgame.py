@@ -2,103 +2,120 @@
 import random
 from player import Player
 from cards import Card, Suit
-
+from typing import Optional 
 
 class BoardGame:
-    def __init__(self, players0 : list[Player], open : bool):
-
-        self.players = players0
-
-        #Initial deck 
-        self.deck = []
-
-        #Initial pot 
-        self.pots : tuple[list[Card], list[Card]]
-
-        #Init discard pile :
-        self.discard_pile = []
-
-        #Open Buraco
-        self.is_open : bool = open
-
-    def add_player(self, player):
-        self.players.append(player)
-
-    def remove_player(self, player):
-        self.players.remove(player)
-
-    def draw_from_deck(self):
-        if not self.deck:
-            raise Exception("Deck is empty!")
-        return self.deck.pop()
-
-    def draw_from_discard(self, whichplayer : int) -> None:
-        if not self.discard_pile:
-            raise Exception("Discard pile is empty!")
+    def __init__(self, players: list[Player], is_open: bool) -> None:
+        """
+         Main game board.
+        :param players: List of players sitting at the table
+        :param is_open: True if the game is "open buraco", False otherwise
+        """
         
-        self.players[whichplayer].add_card(self.discard_pile)
-        self.discard_pile = []
+        self.players: list[Player] = players
+        # Deal 11 cards to each player
+        for _ in range(11):
+            for p in self.players:
+                p.add_card(self.draw_from_deck())
 
-    def draw_from_discard(self, whichplayer : int, cards : list[Card]) -> None:
-        if not self.discard_pile:
-            raise Exception("Discard pile is empty!")
-        
-        score : int = self.players[whichplayer].play_cards(self.discard_pile + cards)
-
-        if score == 0:
-            print("You can't draw from the trash")
-
-        else:
-            self.discard_pile = []
-
-    def add_to_discard(self, card):
-        self.discard_pile.append(card)
-
-    # Distribution initiale et gestion du tour
-    def setup_game(self):
-        """Crée le jeu, mélange les cartes et distribue aux joueurs"""
-        # Création du paquet (2x52 + jokers)
-        from cards import Card, Suit
-        self.deck = []
+        # Main deck
+        self.deck: list[Card] = []
+        # Build the full deck
         for _ in range(2):
             for s in [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]:
                 for v in range(1, 14):
                     self.deck.append(Card(s, v))
+
         # Jokers
         for _ in range(4):
             self.deck.append(Card(Suit.JOKER, 0))
-
+        # Shuffle the deck
         random.shuffle(self.deck)
 
-        pot_1 : list[Card] = []
-        pot_2 : list[Card] = []
+        # Two pots for the second phase of the game (initially not set)
+        self.pots: Optional[tuple[list[Card], list[Card]]] = None
+        # Create the two pots (11 cards each)
+        pot_1: list[Card] = [self.deck.pop() for _ in range(11)]
+        pot_2: list[Card] = [self.deck.pop() for _ in range(11)]
+        self.pots = (pot_1, pot_2)
 
-        # Distribuer 11 cartes à chaque joueur
-        for _ in range(11):
-            el1 = random.randint(0,len(self.deck))
-            pot_1.append(self.deck(el1))
-            self.deck.pop(el1)
+        # Discard pile (top is at the end of the list)
+        self.discard_pile: list[Card] = []
+        # First card on the discard pile
+        self.add_to_discard(self.draw_from_deck())
 
-            el2 = random.randint(0,len(self.deck))
-            pot_2.append(self.deck(el2))
-            self.deck.pop(el2)
+        # Open buraco or closed buraco
+        self.is_open: bool = is_open
 
-            for p in self.players:
-                p.add_card(self.deck.pop())
+    # ---------- Player management ----------
 
-        self.pots : tuple[list[Card], list[Card]] = [pot_1, pot_2]
+    def add_player(self, player: Player) -> None:
+        """Add a player to the table."""
+        self.players.append(player)
 
-        # Première carte sur la défausse
-        self.discard_pile.append(self.deck.pop())
+    def remove_player(self, player: Player) -> None:
+        """Remove a player from the table."""
+        self.players.remove(player)
 
-    def next_player_index(self, current_index):
-        """Retourne l’indice du joueur suivant"""
+    # ---------- Deck / discard pile management ----------
+
+    def draw_from_deck(self) -> Card:
+        """
+        Draw a single card from the top of the deck.
+
+        :return: Card drawn from the deck
+        :raises RuntimeError: if the deck is empty
+        """
+        if not self.deck:
+            raise RuntimeError("Deck is empty!")
+        return self.deck.pop()
+
+    def draw_from_discard(self) -> List[Card]:
+        """
+        Take the whole discard pile (used when a player picks up the discard).
+
+        :return: List of cards that were in the discard pile
+        :raises RuntimeError: if the discard pile is empty
+        """
+        if not self.discard_pile:
+            raise RuntimeError("Discard pile is empty!")
+
+        cards = self.discard_pile.copy()
+        self.discard_pile.clear()
+        return cards
+
+    def add_to_discard(self, card: Card) -> None:
+        """
+        Add a single card on top of the discard pile.
+
+        :param card: Card to add to the discard pile
+        """
+        self.discard_pile.append(card)
+
+# ---------- Turn management / display ----------
+
+    def next_player_index(self, current_index: int) -> int:
+        """
+        Return the index of the next player at the table (circular).
+
+        :param current_index: Index of the current player
+        :return: Index of the next player
+        """
         return (current_index + 1) % len(self.players)
 
-    def display_state(self):
-        """Affiche un petit résumé du plateau"""
+    def display_state(self) -> None:
+        """
+        Print a small summary of the table:
+        - each player with hand size and score
+        - top card of the discard pile
+        """
         print("\n========== TABLE ==========")
         for p in self.players:
-            print(f"{p.name} ({len(p.cards)} cartes, score={p.score})")
-        print(f"Défausse : {self.discard_pile[-1]}")
+            print(f"{p.name} ({len(p.cards)} cards, score={p.score})")
+
+        if self.discard_pile:
+            print(f"Discard (top): {self.discard_pile[-1]}")
+        else:
+            print("Discard: empty")
+
         print("============================\n")

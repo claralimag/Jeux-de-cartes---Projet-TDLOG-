@@ -11,7 +11,7 @@ class BoardGame:
         :param players: List of players sitting at the table
         :param is_open: True if the game is "open buraco", False otherwise
         """
-        
+
         self.players: list[Player] = players
         # Deal 11 cards to each player
         for _ in range(11):
@@ -19,7 +19,7 @@ class BoardGame:
                 p.add_card(self.draw_from_deck())
 
         # Main deck
-        self.deck: list[Card] = []
+        self.deck : list[Card] = []
         # Build the full deck
         for _ in range(2):
             for s in [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]:
@@ -33,7 +33,7 @@ class BoardGame:
         random.shuffle(self.deck)
 
         # Two pots for the second phase of the game (initially not set)
-        self.pots: Optional[tuple[list[Card], list[Card]]] = None
+        self.pots: list[list[Card]] = None
         # Create the two pots (11 cards each)
         pot_1: list[Card] = [self.deck.pop() for _ in range(11)]
         pot_2: list[Card] = [self.deck.pop() for _ in range(11)]
@@ -66,11 +66,12 @@ class BoardGame:
         :return: Card drawn from the deck
         :raises RuntimeError: if the deck is empty
         """
-        if not self.deck:
+        if not self.deck :
             raise RuntimeError("Deck is empty!")
+        
         return self.deck.pop()
 
-    def draw_from_discard(self) -> List[Card]:
+    def draw_from_discard(self) -> list[Card]:
         """
         Take the whole discard pile (used when a player picks up the discard).
 
@@ -91,6 +92,19 @@ class BoardGame:
         :param card: Card to add to the discard pile
         """
         self.discard_pile.append(card)
+    
+    def take_pot(self) -> list[Card]:
+        """
+        Give a new pot (set of 11 cards) to a player/team.
+
+        :return: The list of cards in the pot
+        :raises RuntimeError: if there is no pot left
+        """
+        if not self.pots:
+            raise RuntimeError("No pots left!")
+
+        # pop() without index takes the last pot in the list
+        return self.pots.pop()
 
 # ---------- Turn management / display ----------
 

@@ -2,6 +2,7 @@
 #BoardPlayer : defines the board of a player (cards played, functions : add a card to the board to a sequence, add a collection of cards)
 from cards import Card
 from copy import deepcopy
+
 class BoardPlayer :
     def __init__(self):
         self.cardgames : list[tuple[list[Card], bool, int]]  = [] #bool stores if the game is clean and int stores the number of points

@@ -1,13 +1,12 @@
 # Defined by a name, a list of cards, a board (BoardPlayer) and a score (functions : add card, move card, play a card (add to board - maybe exception?), change score)
 from cards import Card, Suit
 from boardplayer import BoardPlayer
-import boardgame
 import cards
 import random
 
 
 class Player :
-    def __init__(self, name: str, cards: List["Card"], board: "BoardPlayer", score: int = 0) -> None:
+    def __init__(self, name: str, cards: list["Card"], board: "BoardPlayer", score: int = 0) -> None:
             """
             Initialize a player.
 
@@ -32,7 +31,7 @@ class Player :
         """
         self.cards.append(card)
 
-    def add_cards(self, cards: List["Card"]) -> None:
+    def add_cards(self, cards: list["Card"]) -> None:
         """
         Add multiple cards to the player's hand (e.g. taking the discard pile).
 
@@ -54,7 +53,7 @@ class Player :
 
      # ---------- Playing cards on the board ----------
 
-    def play_cards(self, cards_to_play: List["Card"], game_index: int, from_trash: bool = False) -> int:
+    def play_cards(self, cards_to_play: list["Card"], game_index: int, from_trash: bool = False) -> int:
         """
         Play a set of cards on the player's board.
 
@@ -88,7 +87,7 @@ class Player :
             print(f"{idx}: {card}")
 
     
-    def update_cards(self, cards_to_remove: List["Card"]) -> None:
+    def update_cards(self, cards_to_remove: list["Card"]) -> None:
         """
         Remove a list of cards from the player's hand (after playing them).
 

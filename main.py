@@ -45,8 +45,7 @@ def play(player1 : Player, player2 : Player):
     p2 = player2
 
 # We create the game board
-    game = bg.BoardGame([p1, p2], open=True)
-    game.setup_game()
+    game = bg.BoardGame([p1, p2], True)
     
     curr_idx = 0
 
@@ -133,14 +132,13 @@ def play(player1 : Player, player2 : Player):
     for p in game.players:
         print(f"{p.name} : {p.score} points")
 
-#Commentaires : Il faut adapter boardgame ´pour considérer la version fermée ou ouverte du jeu. 
-# Il faut regarder des stratégies plus complexes pour le robot (piocher dans la défausse seulement si ça l'aide à compléter un jeu, etc.)
-# Il faut implémenter dans la deuxième partie la gestion des pots (vérifier si un joueur a vidé son boardplayer, distribuer les points des pots, etc.)
-# Une fois ceci-fait il faut vérifier que les règles sont bien respectées: on ne peut finir que avec une canasta, etc.
-# Traiter l'exception dans play_cards
-
 if __name__ == "__main__":
     p1 = Player("Alice", [], bp.BoardPlayer(), 0)
     p2 = RobotEasy("Bot", [], bp.BoardPlayer(), 0)
     play(p1, p2)
     
+#Commentaires : Il faut adapter boardgame ´pour considérer la version fermée ou ouverte du jeu. 
+# Il faut regarder des stratégies plus complexes pour le robot (piocher dans la défausse seulement si ça l'aide à compléter un jeu, etc.)
+# Il faut implémenter dans la deuxième partie la gestion des pots (vérifier si un joueur a vidé son boardplayer, distribuer les points des pots, etc.)
+# Une fois ceci-fait il faut vérifier que les règles sont bien respectées: on ne peut finir que avec une canasta, etc.
+# Traiter l'exception dans play_cards

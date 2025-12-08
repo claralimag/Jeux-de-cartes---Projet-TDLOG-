@@ -66,7 +66,7 @@ class Player :
         """
 
         # Add cards to player's board
-        newscore = self.board.add_to_existing_game(cards_to_play, game_index)
+        newscore = self.board.add_to_board(cards_to_play, game_index)
         
         # Check if the move is valid
         if newscore == 0:

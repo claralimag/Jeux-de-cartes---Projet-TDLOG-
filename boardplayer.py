@@ -35,19 +35,38 @@ class BoardPlayer :
 
         return s 
 
-    def add_to_existing_game(self, cards_list : list[Card], whichgame: int)  -> int:
+    def add_to_board(self, cards_list : list[Card], whichgame: int)  -> int:
         #if it can be played, it is played and returns the new score
         # that should be added, and also modifies if it is pure of not.
         #if not, it returns 0
-        cards_list2 = deepcopy(cards_list) #FROM HERE
-        merged_cards = cards_list+self.cardgames[whichgame][0]
-        ordered_cards = Card.order(merged_cards)
-        if ordered_cards:
-            self.cardgames[whichgame][0] = ordered_cards
-            self.cardgames[whichgame][1] = Card.is_sequence(ordered_cards)[1]
-            new_score = ordered_cards.get_score() - cards_list.get_score()
-            return new_score
+        #Start a new sequence
+        if whichgame == -1:
+            cards_list_copy = deepcopy(cards_list) 
+            ordered_cards = Card.order(cards_list_copy)
+            #if I am allowed to order
+            if ordered_cards:
+                is_clean = Card.is_sequence(ordered_cards)[1]
+                self.numberofgames +=1
+                self.cardgames.append([ordered_cards,is_clean,0]) #0 is paceholder until we get the score
+                this_game_idx = self.numberofgames-1 #indexing stats at 0
+                new_score = self.get_score(this_game_idx)
+                self.cardgames[this_game_idx][2] = new_score #updating score
+                return new_score
+            #If not then can't play
+            return 0
+        else: 
+            #add to sequence
+            merged_cards = cards_list+self.cardgames[whichgame][0]
+            ordered_cards = Card.order(merged_cards)
+            if ordered_cards:
+                old_score = self.get_score(whichgame)
+                self.cardgames[whichgame][0] = ordered_cards
+                self.cardgames[whichgame][1] = Card.is_sequence(ordered_cards)[1]
+                new_score = self.get_score(whichgame)
+                self.cardgames[whichgame][2] = new_score
+                return new_score-old_score
         return 0
+  
    
 
 

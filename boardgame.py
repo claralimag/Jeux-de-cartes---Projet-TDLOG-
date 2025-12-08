@@ -12,18 +12,18 @@ class BoardGame:
         :param is_open: True if the game is "open buraco", False otherwise
         """
 
-    def __init__(self, players: List[Player], is_open: bool) -> None:
+    def __init__(self, players: list[Player], is_open: bool) -> None:
         """
         Main game board.
 
         :param players: List of players sitting at the table
         :param is_open: True if the game is "open buraco", False otherwise
         """
-        self.players: List[Player] = players
+        self.players: list[Player] = players
         self.is_open: bool = is_open
 
         # --- Build and shuffle the full deck ---
-        self.deck: List[Card] = []
+        self.deck: list[Card] = []
         for _ in range(2):
             for s in [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]:
                 for v in range(1, 14):
@@ -33,9 +33,9 @@ class BoardGame:
         random.shuffle(self.deck)
 
         # --- Create the two pots (11 cards each) ---
-        pot_1: List[Card] = [self.deck.pop() for _ in range(11)]
-        pot_2: List[Card] = [self.deck.pop() for _ in range(11)]
-        self.pots: List[List[Card]] = [pot_1, pot_2]
+        pot_1: list[Card] = [self.deck.pop() for _ in range(11)]
+        pot_2: list[Card] = [self.deck.pop() for _ in range(11)]
+        self.pots: list[list[Card]] = [pot_1, pot_2]
 
         # --- Deal 11 cards to each player ---
         for _ in range(11):
@@ -43,7 +43,7 @@ class BoardGame:
                 p.add_card(self.draw_from_deck())
 
         # --- Initialize discard pile ---
-        self.discard_pile: List[Card] = []
+        self.discard_pile: list[Card] = []
         self.add_to_discard(self.draw_from_deck())
 
 

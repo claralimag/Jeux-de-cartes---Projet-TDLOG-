@@ -52,7 +52,7 @@ class Player :
 
      # ---------- Playing cards on the board ----------
 
-    def play_cards(self, cards_to_play: List["Card"], game_index: int, from_trash: bool = False) -> int:
+    def play_cards(self, cards_to_play: list["Card"], game_index: int, from_trash: bool = False) -> int:
         """
         Play a set of cards on the player's board.
 
@@ -89,7 +89,7 @@ class Player :
         for idx, card in enumerate(self.cards):
             print(f"{idx}: {card}")
 
-    def update_cards(self, cards_to_remove: List["Card"]) -> bool:
+    def update_cards(self, cards_to_remove: list["Card"]) -> bool:
         """
         Remove a list of cards from the player's hand (after playing them).
 
@@ -106,7 +106,7 @@ class Player :
 
         return len(self.cards) > 0
 
-    def new_cards(self, cards: List["Card"]) -> None:
+    def new_cards(self, cards: list["Card"]) -> None:
         """
         Replace the player's hand completely (useful when taking a pot as a new hand).
         """

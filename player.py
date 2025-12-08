@@ -1,7 +1,6 @@
 # Defined by a name, a list of cards, a board (BoardPlayer) and a score (functions : add card, move card, play a card (add to board - maybe exception?), change score)
 from cards import Card, Suit
 from boardplayer import BoardPlayer
-import cards
 import random
 
 
@@ -53,30 +52,34 @@ class Player :
 
      # ---------- Playing cards on the board ----------
 
-    def play_cards(self, cards_to_play: list["Card"], game_index: int, from_trash: bool = False) -> int:
+    def play_cards(self, cards_to_play: List["Card"], game_index: int, from_trash: bool = False) -> int:
         """
         Play a set of cards on the player's board.
 
         :param cards_to_play: Cards selected by the player
         :param game_index: Index of the game/sequence chosen by the player.
-                           If 0 <= game_index < board.number_of_games, we add to an existing game.
-                           Otherwise, we create a new game on the board.
-        :param from_trash: True if these cards come from the discard pile (not used yet, useful later)
-        :return: Points earned by playing these cards (0 if invalid move)
+                           Convention:
+                             - if 0 <= game_index < board.number_of_games: extend an existing game
+                             - otherwise (e.g. -1): create a new game on the board
+        :param from_trash: True if these cards come from the discard pile (not used yet)
+        :return: Points earned by playing these cards
+        :raises ValueError: if the move is invalid
         """
 
-        # Add cards to player's board
+        # Delegate validity checking + scoring to BoardPlayer
+        # You changed BoardPlayer to handle "new vs existing" inside add_to_board
         newscore = self.board.add_to_board(cards_to_play, game_index)
-        
-        # Check if the move is valid
+
+        # If add_to_board returns 0, we treat it as an invalid move
         if newscore == 0:
-            raise ValueError
+            raise ValueError("Invalid meld / sequence.")
 
         # Update score and remove cards from the player's hand
         self.update_score(newscore)
         self.update_cards(cards_to_play)
 
         return newscore
+    # ---------- Display and hand updates ----------
 
     def show_hand(self) -> None:
         """
@@ -86,12 +89,12 @@ class Player :
         for idx, card in enumerate(self.cards):
             print(f"{idx}: {card}")
 
-    
-    def update_cards(self, cards_to_remove: list["Card"]) -> None:
+    def update_cards(self, cards_to_remove: List["Card"]) -> bool:
         """
         Remove a list of cards from the player's hand (after playing them).
 
         :param cards_to_remove: Cards that should be removed from the hand
+        :return: True if the player still has cards in hand, False if the hand is now empty
         """
         for el in cards_to_remove:
             try:
@@ -100,7 +103,14 @@ class Player :
                 print(f"{el} is not in your hand")
                 # Ignore and continue
                 pass
-                    
+
+        return len(self.cards) > 0
+
+    def new_cards(self, cards: List["Card"]) -> None:
+        """
+        Replace the player's hand completely (useful when taking a pot as a new hand).
+        """
+        self.cards = cards
 
 
 class Robot(Player):

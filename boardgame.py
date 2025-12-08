@@ -12,40 +12,40 @@ class BoardGame:
         :param is_open: True if the game is "open buraco", False otherwise
         """
 
-        self.players: list[Player] = players
-        # Deal 11 cards to each player
-        for _ in range(11):
-            for p in self.players:
-                p.add_card(self.draw_from_deck())
+    def __init__(self, players: List[Player], is_open: bool) -> None:
+        """
+        Main game board.
 
-        # Main deck
-        self.deck : list[Card] = []
-        # Build the full deck
+        :param players: List of players sitting at the table
+        :param is_open: True if the game is "open buraco", False otherwise
+        """
+        self.players: List[Player] = players
+        self.is_open: bool = is_open
+
+        # --- Build and shuffle the full deck ---
+        self.deck: List[Card] = []
         for _ in range(2):
             for s in [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]:
                 for v in range(1, 14):
                     self.deck.append(Card(s, v))
-
-        # Jokers
-        for _ in range(4):
+        for _ in range(4):  # Jokers
             self.deck.append(Card(Suit.JOKER, 0))
-        # Shuffle the deck
         random.shuffle(self.deck)
 
-        # Two pots for the second phase of the game (initially not set)
-        self.pots: list[list[Card]] = None
-        # Create the two pots (11 cards each)
-        pot_1: list[Card] = [self.deck.pop() for _ in range(11)]
-        pot_2: list[Card] = [self.deck.pop() for _ in range(11)]
-        self.pots = (pot_1, pot_2)
+        # --- Create the two pots (11 cards each) ---
+        pot_1: List[Card] = [self.deck.pop() for _ in range(11)]
+        pot_2: List[Card] = [self.deck.pop() for _ in range(11)]
+        self.pots: List[List[Card]] = [pot_1, pot_2]
 
-        # Discard pile (top is at the end of the list)
-        self.discard_pile: list[Card] = []
-        # First card on the discard pile
+        # --- Deal 11 cards to each player ---
+        for _ in range(11):
+            for p in self.players:
+                p.add_card(self.draw_from_deck())
+
+        # --- Initialize discard pile ---
+        self.discard_pile: List[Card] = []
         self.add_to_discard(self.draw_from_deck())
 
-        # Open buraco or closed buraco
-        self.is_open: bool = is_open
 
     # ---------- Player management ----------
 
@@ -103,8 +103,33 @@ class BoardGame:
         if not self.pots:
             raise RuntimeError("No pots left!")
 
-        # pop() without index takes the last pot in the list
         return self.pots.pop()
+    
+    def deck_empty(self) -> bool:
+        """Return True if the deck is empty."""
+        return len(self.deck) == 0
+
+    def update_deck(self) -> bool:
+        """
+        Refill the deck using one of the remaining pots.
+        :return: True if the deck was refilled, False if no pots remain
+        """
+        if self.pots:
+            self.deck = self.pots.pop()
+            return True
+        return False
+    
+    def can_end(self, whichplayer: int) -> bool:
+        """
+        Check if the player can end the game.
+        (Example condition: has at least one clean sequence of 7+ cards)
+        """
+        player = self.players[whichplayer]
+        for seq in player.board:  # adapt depending on BoardPlayer structure
+            # Suppose each element of player.board is (sequence, is_clean)
+            if len(seq[0]) >= 7 and seq[1]:
+                return True
+        return False
 
 # ---------- Turn management / display ----------
 

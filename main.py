@@ -1,12 +1,11 @@
-import boardplayer as bp 
-import boardgame as bg
-from cards import Card, Suit
+from typing import List, Tuple
+import boardplayer as bp
+from boardgame import BoardGame
 from player import Player, Robot, RobotEasy
-from boardplayer import BoardPlayer
-from boardgame import BoardGame 
-from random import randint
 
-def get_choice(prompt, max_val):
+
+def get_choice(prompt: str, max_val: int) -> int:
+    """Ask the user for an integer between 0 and max_val (inclusive)."""
     while True:
         try:
             val = int(input(prompt))
@@ -14,131 +13,177 @@ def get_choice(prompt, max_val):
                 return val
         except ValueError:
             pass
-        print("Entrée invalide.")
-
-def input_cards() -> list[Card]:
-        print("Entrez les indices des cartes à jouer (ex: 0 1 2) séparés par espace:")
-        indexes = list(map(int, input("> ").split()))
-
-        print("Entrez le numéro du jeu à compléter (ou -1 pour un nouveau jeu):")
-        whichgame = int(input("> "))
-        return indexes, whichgame
-
-def robot_play_cards_easy(robot : Robot, board : BoardGame, whichplayer : int) -> Card:
-        # input : Player representing the computer
-        # output : Card to trow out in the trash 
-
-        board.draw_from_discard(whichplayer)  #robot draws from the discard pile if possible
-
-        card_to_throw = robot.robot_play_cards_easy(whichplayer) #robot plays a card if possible
-
-        return card_to_throw
+        print(f"Invalid input. Please enter an integer between 0 and {max_val}.")
 
 
-def play(player1 : Player, player2 : Player):
+def input_cards() -> Tuple[List[int], int]:
+    """
+    Ask the user which cards to play and which game (sequence) to target.
+
+    :return: (list_of_indices, game_index)
+             game_index = -1 means "new game on the board"
+    """
+    print("Enter the indices of the cards to play (e.g. 0 1 2), separated by spaces:")
+    indexes = list(map(int, input("> ").split()))
+
+    print("Enter the index of the game to extend (or -1 for a new game):")
+    game_index = int(input("> "))
+
+    return indexes, game_index
+
+
+def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) -> bool:
+    """
+    Handle one turn for a robot player.
+    """
+    # --- DRAW PHASE ---
+    picked_from_discard = curr_p.robot_pick_cards(curr_idx, game.discard_pile, game.is_open)
+
+    if picked_from_discard and game.discard_pile:
+        cards = game.draw_from_discard()
+        curr_p.add_cards(cards)
+        print(f"{curr_p.name} took {len(cards)} cards from the discard pile.")
+    else:
+        card = game.draw_from_deck()
+        curr_p.add_card(card)
+        print(f"{curr_p.name} drew: {card}")
+
+    # --- ACTION PHASE ---
+    card_to_discard = curr_p.robot_play(curr_idx)
+    curr_p.update_cards([card_to_discard])
+    game.add_to_discard(card_to_discard)
+    print(f"{curr_p.name} discarded: {card_to_discard}")
+
+    return False
+
+
+def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int) -> Tuple[bool, bool]:
+    """
+    Handle one turn for a human player.
+    Returns (should_stop, first_game_updated)
+    """
+    # --- DRAW PHASE ---
+    curr_p.show_hand()
+    print("Draw phase: 0 = Deck | 1 = Take discard pile")
+    choice = get_choice("Choice: ", 1)
+
+    if choice == 1 and game.discard_pile:
+        picked = game.draw_from_discard()
+        curr_p.add_cards(picked)
+        print(f"You took {len(picked)} cards from the discard pile.")
+    else:
+        card = game.draw_from_deck()
+        curr_p.add_card(card)
+        print(f"You drew: {card}")
+
+    # --- ACTION PHASE ---
+    while True:
+        curr_p.show_hand()
+        print("Actions:")
+        print("  0 = End turn (discard)")
+        print("  1 = Lay a new meld")
+        print("  2 = Extend an existing meld")
+
+        action = get_choice("Action: ", 2)
+        if action == 0:
+            break
+
+        try:
+            indexes, game_index = input_cards()
+            if action == 1:
+                game_index = -1
+
+            cards_to_play = [curr_p.cards[i] for i in indexes if 0 <= i < len(curr_p.cards)]
+            if not cards_to_play:
+                print("No valid cards selected.")
+                continue
+
+            hand_nonempty = curr_p.update_cards(cards_to_play)
+
+            # If the player emptied their hand
+            if not hand_nonempty:
+                if first_game:
+                    try:
+                        new_pot = game.take_pot()
+                        curr_p.add_cards(new_pot)
+                        print(f"{curr_p.name} took a new pot with {len(new_pot)} cards.")
+                        first_game = False
+                    except RuntimeError:
+                        if game.can_end(curr_idx):
+                            print("The game is over.")
+                            return True, first_game
+                        else:
+                            print("You cannot end the game yet.")
+                else:
+                    if game.can_end(curr_idx):
+                        print("The game is over.")
+                        return True, first_game
+                    else:
+                        print("You cannot end the game yet.")
+
+            # Try to play cards
+            points = curr_p.play_cards(cards_to_play, game_index)
+            if points > 0:
+                print(f"You scored {points} points.")
+
+        except ValueError:
+            print("Invalid input (not an integer).")
+        except IndexError:
+            print("One of the indices is out of range.")
+
+    # --- DISCARD PHASE ---
+    curr_p.show_hand()
+    if not curr_p.cards:
+        print("You have no cards left to discard.")
+        return False, first_game
+
+    print("Choose the index of the card to discard:")
+    idx = get_choice("> ", len(curr_p.cards) - 1)
+    card_to_discard = curr_p.cards[idx]
+    curr_p.update_cards([card_to_discard])
+    game.add_to_discard(card_to_discard)
+    print(f"Discarded: {card_to_discard}")
+
+    return False, first_game
+
+
+def play(player1: Player, player2: Player) -> None:
+    """Main game loop for a 2-player Buraco."""
     print("--- BURACO CONSOLE ---")
 
-# We create a board for each player
-    bp1 = bp.BoardPlayer()
-    bp2 = bp.BoardPlayer()
     p1 = player1
     p2 = player2
+    game = BoardGame([p1, p2], is_open=True)
 
-# We create the game board
-    game = bg.BoardGame([p1, p2], True)
-    
     curr_idx = 0
+    first_game_flags = [True, True]  # Each player starts before taking their pot
 
     while True:
         curr_p = game.players[curr_idx]
-        print(f"\n\n>>> C'EST A {curr_p.name.upper()} <<<")
+        print(f"\n\n>>> {curr_p.name.upper()}'S TURN <<<")
         game.display_state()
 
-        if isinstance(game.players[curr_idx], Robot):
-                # 1. PIOCHE
-                picked_cards = curr_p.robot_pick_cards(curr_idx, game.discard_pile, game.is_open) #True if we pick cards from the trash
-
-                if picked_cards:
-                        cards = game.draw_from_discard(curr_idx)
-                        print(f"Le robot a ramassé {len(picked_cards)} cartes.")
-                        curr_p.add_cards(cards)
-
-                else :
-                        card = game.draw_from_deck()
-                        if card is None:
-                                print("Plus de cartes ! Fin du jeu.")
-                                break
-                        curr_p.add_card(card)
-                        print(f"Le robot a pioché : {card}")
-
-                # 2. ACTIONS
-                card_to_throw = curr_p.robot_play(curr_idx)
-                game.add_to_discard(card_to_throw)
-                curr_p.update_cards([card_to_throw])
-                print(f"Le robot a défaussé : {card_to_throw}")
-
+        if isinstance(curr_p, Robot):
+            should_stop = robot_turn(curr_p, game, curr_idx, first_game_flags[curr_idx])
         else:
-                curr_p.show_hand()
+            should_stop, first_game_flags[curr_idx] = human_turn(curr_p, game, first_game_flags[curr_idx], curr_idx)
 
-                # 1. PIOCHE 
-                print("0: Deck | 1: Ramasser Défausse")
-                choix = get_choice("Choix: ", 1)
-                if choix == 1 and game.discard_pile:
-                        picked = game.draw_from_discard(curr_idx)
-                        print(f"Vous avez ramassé {len(picked)} cartes.")
-                        curr_p.add_cards(picked)
-                
-                else:
-                        card = game.draw_from_deck()
-                        if card is None:
-                                print("Plus de cartes ! Fin du jeu.")
-                                break
-                        curr_p.add_card(card)
-                        print(f"Pioché : {card}")
-                
-                curr_p.show_hand()
+        if should_stop:
+            break
 
-                # 2. ACTIONS
-                # stopping condition: 
-
-                print("Actions: 0: Finir tour (Défausser) | 1: Poser un nouveau jeu | 2: Compléter un jeu")
-                i = get_choice("Action: ", 2)
-
-                while i > 0: 
-                        print("Entrez les indices des cartes à jouer (ex: 0 1 2) séparés par espace et le jeu auquel tu souhaites ajouter (si c'est le cas):")
-                        try:
-                                selected_cards, whichgame = input_cards()
-                                indexes = list(map(int, input("> ").split()))
-                                cards_to_play = [curr_p.cards[i] for i in indexes if 0 <= i < len(curr_p.cards)]
-        
-                                curr_p.play_cards(cards_to_play,whichgame=whichgame)
-        
-                        except ValueError:
-                                print("Entrée invalide.")
-                                continue
-
-                # 3. DEFAUSSE
-                print("Choisissez l'index de la carte à défausser:")
-                idx = get_choice("> ", len(curr_p.cards)-1)
-                c = curr_p.cards[idx]
-                curr_p.update_cards([c])
-                game.add_to_discard(c)
-                print(f"Défaussé: {c}")
+        if game.deck_empty():
+            if not game.update_deck():
+                print("Deck is empty and no more pots left. Game over.")
+                break
 
         curr_idx = game.next_player_index(curr_idx)
 
-    print("Fin du jeu. Merci d'avoir joué !")
-    print("Scores finaux :")
+    print("\nGame over. Final scores:")
     for p in game.players:
-        print(f"{p.name} : {p.score} points")
+        print(f"{p.name}: {p.score} points")
+
 
 if __name__ == "__main__":
     p1 = Player("Alice", [], bp.BoardPlayer(), 0)
     p2 = RobotEasy("Bot", [], bp.BoardPlayer(), 0)
     play(p1, p2)
-    
-#Commentaires : Il faut adapter boardgame ´pour considérer la version fermée ou ouverte du jeu. 
-# Il faut regarder des stratégies plus complexes pour le robot (piocher dans la défausse seulement si ça l'aide à compléter un jeu, etc.)
-# Il faut implémenter dans la deuxième partie la gestion des pots (vérifier si un joueur a vidé son boardplayer, distribuer les points des pots, etc.)
-# Une fois ceci-fait il faut vérifier que les règles sont bien respectées: on ne peut finir que avec une canasta, etc.
-# Traiter l'exception dans play_cards

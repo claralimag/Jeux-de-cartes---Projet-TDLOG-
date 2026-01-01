@@ -61,8 +61,8 @@ class Card:
             pure = False
             nb_unpure += 1
         if not follows:
-          return False
-        return True,pure ,nb_unpure
+          return False, False, 2
+        return True,pure , nb_unpure
 
     @staticmethod
     def ordercards(card_list: list["Card"]) -> list["Card"] | None:

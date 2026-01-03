@@ -7,13 +7,6 @@ from typing import Optional
 class BoardGame:
     def __init__(self, players: list[Player], is_open: bool) -> None:
         """
-         Main game board.
-        :param players: List of players sitting at the table
-        :param is_open: True if the game is "open buraco", False otherwise
-        """
-
-    def __init__(self, players: list[Player], is_open: bool) -> None:
-        """
         Main game board.
 
         :param players: List of players sitting at the table
@@ -41,6 +34,10 @@ class BoardGame:
         for _ in range(11):
             for p in self.players:
                 p.add_card(self.draw_from_deck())
+
+        # --- Order player's cards ---
+        for p in self.players:
+           p.order_hand()
 
         # --- Initialize discard pile ---
         self.discard_pile: list[Card] = []

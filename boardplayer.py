@@ -4,69 +4,98 @@ from cards import Card
 from copy import deepcopy
 
 class BoardPlayer :
+    """
+    Stores all melds (sequences/sets) played by a single player.
+    Each entry in self.cardgames is:
+    [cards_in_meld (list[Card]), is_pure (bool), score_for_this_meld (int)]
+    """
+     
     def __init__(self):
-        self.cardgames : list[tuple[list[Card], bool, int]]  = [] #bool stores if the game is clean and int stores the number of points
+        self.cardgames : list[list[list[Card], bool, int]]  = [] #bool stores if the game is clean and int stores the number of points
         self.numberofgames : int = 0
 
     
-    def get_score(self, whichgame) -> int:
-        s : int = 0
-        cards = self.cardsgame[whichgame][0]
-        is_pure = self.cardsgame[whichgame][1]
+    def get_score(self, whichgame: int) -> int:
+        """
+        Compute the total score of a given meld (sequence/set),
+        including base card points and canastra bonuses.
+        """
+        cards, is_pure, _ = self.cardgames[whichgame]
+
+        # Base points: sum points of each card
+        s = 0
         for el in cards:
-            s+= el.point
+            s += el.point
 
-        if len(cards) >= 7 : #Is canastra ?
-            if len(cards) == 13:
-                if is_pure:
-                    s+= 500
-                else: 
-                    s+= 250
-            if len(cards) == 14:
-                if is_pure:
-                    s+= 1000
-                else: 
-                    s+= 500
+        n = len(cards)
+
+        # Canastra bonus
+        if n >= 7:
+            if n == 13:
+                s += 500 if is_pure else 250
+            elif n == 14:
+                s += 1000 if is_pure else 500
             else:
-                if is_pure:
-                    s+= 200
-                else: 
-                    s+= 100
+                # Any other canastra with 7–12 or >14 cards
+                s += 200 if is_pure else 100
 
-        return s 
+        return s    
 
     def add_to_board(self, cards_list : list[Card], whichgame: int)  -> int:
-        #if it can be played, it is played and returns the new score
-        # that should be added, and also modifies if it is pure of not.
-        #if not, it returns 0
-        #Start a new sequence
+        """
+        Try to play cards on the board.
+
+        :param cards_list: cards the player wants to play
+        :param whichgame: -1 -> start a new meld
+                          0..N-1 -> extend existing meld at that index
+        :return: points gained by this move (0 if invalid)
+        """
+        # --- Start a new meld ---
         if whichgame == -1:
             cards_list_copy = deepcopy(cards_list) 
             ordered_cards = Card.order(cards_list_copy)
+
+            if not ordered_cards:
+                # Cannot form a valid sequence/set
+                return 0
+            
             #if I am allowed to order
-            if ordered_cards:
-                is_clean = Card.is_sequence(ordered_cards)[1]
-                self.numberofgames +=1
-                self.cardgames.append([ordered_cards,is_clean,0]) #0 is paceholder until we get the score
-                this_game_idx = self.numberofgames-1 #indexing stats at 0
-                new_score = self.get_score(this_game_idx)
-                self.cardgames[this_game_idx][2] = new_score #updating score
-                return new_score
-            #If not then can't play
-            return 0
+            is_clean = Card.is_sequence(ordered_cards)[1]
+            self.cardgames.append([ordered_cards, is_clean, 0])
+            self.numberofgames += 1
+
+            this_game_idx = self.numberofgames - 1
+
+            new_score = self.get_score(this_game_idx)
+            self.cardgames[this_game_idx][2] = new_score
+            return new_score
+        
+        # --- Extend an existing meld ---
         else: 
-            #add to sequence
-            merged_cards = cards_list+self.cardgames[whichgame][0]
+            if not (0 <= whichgame < len(self.cardgames)):
+                # Invalid index
+                return 0
+            
+             # Merge current cards with the existing sequence
+            merged_cards = self.cardgames[whichgame][0] + cards_list
             ordered_cards = Card.order(merged_cards)
-            if ordered_cards:
-                old_score = self.get_score(whichgame)
-                self.cardgames[whichgame][0] = ordered_cards
-                self.cardgames[whichgame][1] = Card.is_sequence(ordered_cards)[1]
-                new_score = self.get_score(whichgame)
-                self.cardgames[whichgame][2] = new_score
-                return new_score-old_score
-        return 0
-  
+
+            if not ordered_cards:
+                # Cannot form a valid sequence with the added cards
+                return 0
+            
+            old_score = self.get_score(whichgame)
+
+            # Update cards and purity
+            self.cardgames[whichgame][0] = ordered_cards
+            self.cardgames[whichgame][1] = Card.is_sequence(ordered_cards)[1]
+
+            new_score = self.get_score(whichgame)
+            self.cardgames[whichgame][2] = new_score
+
+            # Return only the difference (points gained this move)
+            return new_score - old_score
+            
    
 
 

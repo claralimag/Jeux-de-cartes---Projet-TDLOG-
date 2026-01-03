@@ -47,31 +47,45 @@ class Card:
             return True,False
         return False,False
 
-    @staticmethod #si deux impurs cest false
-    def is_sequence(card_list: list["Card"]) -> tuple[bool,bool,int]:
-      """firt return bool says if card_list is a sequence,
-      second bool is True if it's a pure sequence, int is the
-      number un unpurities in the sequence """
-      pure = True
-      nb_unpure = 0
-      for i in range(len(card_list)-1):
-        follows,pure_follows = Card.follows(card_list[i],card_list[i])
-        if follows:
-          if not pure_follows:
-            pure = False
-            nb_unpure += 1
-        if not follows:
-          return False, False, 2
-        return True,pure , nb_unpure
+    @staticmethod
+    def is_sequence(card_list: list["Card"]) -> tuple[bool, bool, int]:
+        """
+        First bool:  True if card_list is a valid sequence
+        Second bool: True if the sequence is pure
+        int:         number of impurities (jokers / 2s etc. used as wildcards)
+        """
+        # A sequence of length < 2 is never valid here
+        if len(card_list) < 2:
+            return False, False, 0
+
+        pure = True
+        nb_unpure = 0
+
+        for i in range(len(card_list) - 1):
+            card1 = card_list[i]
+            card2 = card_list[i + 1]
+
+            follows, pure_follows = Card.follows(card1, card2)
+
+            if not follows:
+                # Not a sequence at all
+                return False, False, 0
+
+            if not pure_follows:
+                pure = False
+                nb_unpure += 1
+
+        # If we got here, every neighboring pair "follows"
+        return True, pure, nb_unpure
 
     @staticmethod
     def ordercards(card_list: list["Card"]) -> list["Card"] | None:
-      joker_list     = [card for card in card_list if card.suit == Suit.JOKER]  # jokers
+      joker_list     = [c for c in card_list if c.suit == Suit.JOKER]  # jokers
 
-      heart_list = [card for card in card_list if card.suit == Suit.HEART]
-      diamond_list = [card for card in card_list if card.suit == Suit.DIAMOND]
-      club_list = [card for card in card_list if card.suit == Suit.CLUB]
-      spade_list = [card for card in card_list if card.suit == Suit.SPADE]
+      heart_list   = [c for c in card_list if c.suit == Suit.HEARTS]
+      diamond_list = [c for c in card_list if c.suit == Suit.DIAMONDS]
+      club_list    = [c for c in card_list if c.suit == Suit.CLUBS]
+      spade_list   = [c for c in card_list if c.suit == Suit.SPADES]
 
       #sort cards by suit
       heart_list_sorted = sorted(heart_list, key=lambda e: e.value)

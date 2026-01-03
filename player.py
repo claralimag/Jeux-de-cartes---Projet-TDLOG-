@@ -37,6 +37,12 @@ class Player :
         :param cards: Cards that were taken by the player
         """
         self.cards.extend(cards)
+
+    def order_hand(self) -> None:
+        """
+        Order the player's hand (useful after drawing new cards).
+        """
+        self.cards = Card.ordercards(self.cards)
         
     # ---------- Score management ----------
     def update_score(self, scorepoints: int) -> None:
@@ -87,7 +93,7 @@ class Player :
         """
         print(f"Hand of {self.name}:")
         for idx, card in enumerate(self.cards):
-            print(f"{idx}: {card}")
+            print(f"{idx}: {card.value} of {card.suit}")
 
     def update_cards(self, cards_to_remove: list["Card"]) -> bool:
         """
@@ -102,7 +108,7 @@ class Player :
             except ValueError:
                 print(f"{el} is not in your hand")
                 # Ignore and continue
-                pass
+                break
 
         return len(self.cards) > 0
 
@@ -126,85 +132,66 @@ class Robot(Player):
         """
         pass 
 
-    def play_a_card(self, whichplayer :int) -> None :
-        '''
-        input : 
-        whichplayer : int representing the number of the player in the game
+    def play_a_card(self) -> bool:
+        """
+        Try to add ONE card from the hand to an existing meld on the board.
+        Returns True if it played something, False otherwise.
+        """
+        for card in list(self.cards):  # copy so we can safely modify self.cards
+            for j, (cards_in_meld, is_pure, pts) in enumerate(self.board.cardgames):
+                # Build the combination this meld + this card
+                merged = cards_in_meld + [card]
+
+                # Use the SAME validator as BoardPlayer.add_to_board
+                ordered = Card.order(merged)
+                if ordered is None:
+                    continue  # this card cannot go on this meld
+
+                # We know add_to_board will accept this, so play it
+                try:
+                    self.play_cards([card], j, from_trash=False)
+                except ValueError:
+                    # In theory shouldn't happen now, but just in case
+                    continue
+
+                return True
+
+        return False
         
-        Looks if we can play a card on the board and play it if possible
-
-        output : 
-        None
-        
-        '''
-        card0 = self.cards[0]
-
-        deck = self.board.cardgames
-
-        n = len(self.cards)
-
-        i = 0
-
-        while i<n:
-            for j in range(len(deck)):
-
-                cards, is_pure, points = deck[j]
-
-                if Card.card_to_game(cards + [card0]):    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
-                    self.play_cards([card0], j, False)
-                    self.update_cards([card0])
-                    i = 0  #restart from the beginning
-
-                else:
-                    i+=1
-
-                card0 = self.cards[i]
-        
-            
+    # ----------- PLAY A NEW CLEAN 3-CARD SEQUENCE -----------
     def clean_three_sequence_possible(self) -> bool:
-            '''
-            input : 
-            None
-            
-            Looks if we can play a sequence of at least 3 cards on the board : same color, in order, no jocker
+        """
+        Try to play a new pure sequence of at least 3 cards of the same suit (no jokers / 2s as wildcards).
+        Returns True if something was played.
+        """
+        if len(self.cards) < 3:
+            return False
 
-            output : 
-            bool : True if we can play a sequence of at least 3 cards on the board, False otherwise
-            
-            '''
-            n = len(self.cards)
+        ordered = Card.ordercards(self.cards)
+        if ordered is None:
+            return False
 
-            board_changed = False
+        # Split by suit (without jokers)
+        hearts   = [c for c in ordered if c.suit == Suit.HEARTS and c.value not in (2,)]
+        diamonds = [c for c in ordered if c.suit == Suit.DIAMONDS and c.value not in (2,)]
+        clubs    = [c for c in ordered if c.suit == Suit.CLUBS and c.value not in (2,)]
+        spades   = [c for c in ordered if c.suit == Suit.SPADES and c.value not in (2,)]
 
-            if n<3:
-                return False
+        for color_cards in [hearts, diamonds, clubs, spades]:
+            m = len(color_cards)
+            if m < 3:
+                continue
+            # Try all windows of length >= 3
+            for start in range(m - 2):
+                for end in range(start + 3, m + 1):
+                    sub = color_cards[start:end]
+                    can_be_seq, is_pure, _ = Card.is_sequence(sub)
+                    if can_be_seq and is_pure and len(sub) >= 3:
+                        # Play these cards as a new meld
+                        self.play_cards(sub, game_index=-1, from_trash=False)
+                        return True
 
-            ordered_cards = Card.ordercards(self.cards) #je suppose que cards.Card.order ordonne les cartes
-
-            cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
-            cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
-            cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
-            cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
-
-            for color_cards in [cards_heart, cards_diamond, cards_club, cards_spade]:
-                while len(color_cards) >= 3:
-                    m = len(color_cards)
-                    i = 0
-                    while i < m - 3:
-                        sub_sequence = color_cards[i:i+3]
-                        if Card.order(sub_sequence):
-                                color_cards.pop(i)
-                                color_cards.pop(i+1)
-                                color_cards.pop(i+2)
-                                self.play_cards(sub_sequence, -1, False)
-                                self.update_cards(sub_sequence)
-                                i = 0  # restart from the beginning
-                                m -= 3
-                                board_changed = True
-                        else:
-                            i += 1
-
-            return board_changed
+        return False
     
 
     def jocker_three_sequence_possible(self) -> bool:
@@ -227,16 +214,16 @@ class Robot(Player):
 
         ordered_cards = Card.ordercards(self.cards) #je suppose que cards.Card.order ordonne les cartes
 
-        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
-        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
-        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
-        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEARTS]
+        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMONDS]
+        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUBS]
+        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADES]
 
         jockers = [card for card in ordered_cards if card.suit == Suit.JOKER]
 
         cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
 
-        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
         for color_cards in cards_by_color:
             while len(color_cards) >= 2 and len(jockers) > 0:
                 m = len(color_cards)
@@ -246,9 +233,9 @@ class Robot(Player):
                     if Card.three_cards_with_jocker(jockers[0],sub_sequence):
                         color_cards.pop(i)
                         color_cards.pop(i+1)
-                        jockers.pop(0)
-                        self.play_cards(sub_sequence, -1, False)
-                        self.update_cards(sub_sequence + [jockers[0]])
+                        J = jockers.pop(0)
+                        self.play_cards(sub_sequence  + [J], -1, False)
+                        self.update_cards(sub_sequence + [J])
                         i = 0  # restart from the beginning
                         m -= 2
                         board_changed = True
@@ -280,13 +267,13 @@ class Robot(Player):
 
         ordered_cards = Card.ordercards(self.cards) 
     
-        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
-        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
-        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
-        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEARTS]
+        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMONDS]
+        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUBS]
+        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADES]
 
         cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
-        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
         
         #two as a jocker of the same color
         for color_cards in cards_by_color:
@@ -300,9 +287,9 @@ class Robot(Player):
                     if Card.three_cards_with_jocker(twos[0],sub_sequence) and ((not(sub_sequence[0].value == 2) and not(sub_sequence[1].value == 2)) or (sub_sequence[0].value == 2 and not(sub_sequence[1].value == 2) and len(twos) >=2) or (sub_sequence[1].value == 2 and not(sub_sequence[0].value == 2) and len(twos) >=2)):
                         color_cards.pop(i)
                         color_cards.pop(i)
-                        twos.pop(0)
-                        self.play_cards(sub_sequence, -1, False)
-                        self.update_cards(sub_sequence + [twos[0]])
+                        two = twos.pop(0)
+                        self.play_cards(sub_sequence + [two], -1, False)
+                        self.update_cards(sub_sequence + [two])
                         i = 0  # restart from the beginning
                         m -= 2
                         board_changed = True
@@ -353,9 +340,9 @@ class Robot(Player):
 
                     if Card.three_cards_with_jocker(twos[0],sub_sequence):
                         color_cards.pop(i)
-                        twos.pop(0)
-                        self.play_cards(sub_sequence, -1, False)
-                        self.update_cards(sub_sequence + [twos[0]])
+                        two = twos.pop(0)
+                        self.play_cards(sub_sequence + [two], -1, False)
+                        self.update_cards(sub_sequence + [two])
                         i = 0  # restart from the beginning
                         m -= 2
                         board_changed = True
@@ -393,12 +380,14 @@ class RobotEasy(Robot):
         # output : Card to trow out in the trash 
         # If the robot can play cards, it plays them: even if its not optimal and it can only play a jocker if adding to an existing sequence
         
-        self.play_a_card(whichplayer) #robot plays a card if possible
-
-        board_changed = self.clean_three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
+        playing_cards = self.play_a_card() 
+        while playing_cards: #robot plays a card if possible
+            playing_cards = self.play_a_card()
         
-        if board_changed:
-            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+        playing_melds = self.clean_three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
+        while playing_melds:
+            self.play_a_card() #robot adds cards to existing sequences if possible
+            playing_melds = self.clean_three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
 
         #Throw out a random card:
         n = len(self.cards)

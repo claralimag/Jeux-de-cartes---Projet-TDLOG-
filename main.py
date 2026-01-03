@@ -98,10 +98,8 @@ def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int)
                 print("No valid cards selected.")
                 continue
 
-            hand_nonempty = curr_p.update_cards(cards_to_play)
-
             # If the player emptied their hand
-            if not hand_nonempty:
+            if len(curr_p.cards) == 0:
                 if first_game:
                     try:
                         new_pot = game.take_pot()
@@ -175,6 +173,8 @@ def play(player1: Player, player2: Player) -> None:
             if not game.update_deck():
                 print("Deck is empty and no more pots left. Game over.")
                 break
+        
+        curr_p.order_hand()  # Order player's hand after their turn
 
         curr_idx = game.next_player_index(curr_idx)
 

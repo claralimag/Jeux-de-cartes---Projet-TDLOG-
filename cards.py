@@ -85,12 +85,12 @@ class Card:
 
     @staticmethod
     def ordercards(card_list: list["Card"]) -> list["Card"] | None:
-      joker_list     = [c for c in card_list if c.suit == Suit.JOKER]  # jokers
-
-      heart_list   = [c for c in card_list if c.suit == Suit.HEARTS]
+        
+      joker_list = [c for c in card_list if c.suit == Suit.JOKER]  # jokers
+      heart_list = [c for c in card_list if c.suit == Suit.HEARTS]
       diamond_list = [c for c in card_list if c.suit == Suit.DIAMONDS]
-      club_list    = [c for c in card_list if c.suit == Suit.CLUBS]
-      spade_list   = [c for c in card_list if c.suit == Suit.SPADES]
+      club_list = [c for c in card_list if c.suit == Suit.CLUBS]
+      spade_list = [c for c in card_list if c.suit == Suit.SPADES]
 
       #sort cards by suit
       heart_list_sorted = sorted(heart_list, key=lambda e: e.value)

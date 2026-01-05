@@ -28,6 +28,11 @@ class Card:
                 self.point = 5
             if self.value in [8,9,10,11,12,13]:
                 self.point = 10
+    def __str__(self) -> str:
+        return affiche_carte(self)
+
+    def __repr__(self) -> str:
+        return str(self)
 
 
     @staticmethod
@@ -394,3 +399,27 @@ class Card:
             ordered_list.append(joker_card)
             return ordered_list
       return None
+def affiche_carte(card: "Card") -> str:
+    "Retourne une représentation lisible d'une carte, par ex. 'A♥'"
+    if card.suit == Suit.JOKER:
+        return "JOKER"
+
+    if card.value == 1:
+        val = "A"
+    elif card.value == 11:
+        val = "V"   # Valet
+    elif card.value == 12:
+        val = "D"   # Dame
+    elif card.value == 13:
+        val = "R"   # Roi
+    else:
+        val = str(card.value)
+
+    symbole_couleur = {
+        Suit.HEARTS: "♥",
+        Suit.DIAMONDS: "♦",
+        Suit.CLUBS: "♣",
+        Suit.SPADES: "♠",
+    }[card.suit]
+
+    return f"{val}{symbole_couleur}"

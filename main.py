@@ -1,4 +1,3 @@
-from typing import List, Tuple
 import boardplayer as bp
 from boardgame import BoardGame
 from player import Player, Robot, RobotEasy
@@ -16,7 +15,7 @@ def get_choice(prompt: str, max_val: int) -> int:
         print(f"Invalid input. Please enter an integer between 0 and {max_val}.")
 
 
-def input_cards() -> Tuple[List[int], int]:
+def input_cards() -> tuple[list[int], int]:
     """
     Ask the user which cards to play and which game (sequence) to target.
 
@@ -40,24 +39,24 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) 
     picked_from_discard = curr_p.robot_pick_cards(curr_idx, game.discard_pile, game.is_open)
 
     if picked_from_discard and game.discard_pile:
-        cards = game.draw_from_discard()
-        curr_p.add_cards(cards)
-        print(f"{curr_p.name} took {len(cards)} cards from the discard pile.")
+        discard_pile = game.draw_from_discard()
+        curr_p.add_cards(discard_pile)
+        print(f"{curr_p.name} took {len(discard_pile)} cards from the discard pile.")
     else:
         card = game.draw_from_deck()
         curr_p.add_card(card)
         print(f"{curr_p.name} drew: {card}")
 
     # --- ACTION PHASE ---
-    card_to_discard = curr_p.robot_play(curr_idx)
+    card_to_discard = curr_p.robot_play(curr_idx) #ceci tourne à l'infini
     curr_p.update_cards([card_to_discard])
-    game.add_to_discard(card_to_discard)
+    game.add_to_discard(card_to_discard) 
     print(f"{curr_p.name} discarded: {card_to_discard}")
 
     return False
 
 
-def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int) -> Tuple[bool, bool]:
+def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int) -> tuple[bool, bool]:
     """
     Handle one turn for a human player.
     Returns (should_stop, first_game_updated)
@@ -98,8 +97,10 @@ def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int)
                 print("No valid cards selected.")
                 continue
 
+            hand_nonempty = curr_p.update_cards(cards_to_play)
+
             # If the player emptied their hand
-            if len(curr_p.cards) == 0:
+            if not hand_nonempty:
                 if first_game:
                     try:
                         new_pot = game.take_pot()
@@ -173,8 +174,6 @@ def play(player1: Player, player2: Player) -> None:
             if not game.update_deck():
                 print("Deck is empty and no more pots left. Game over.")
                 break
-        
-        curr_p.order_hand()  # Order player's hand after their turn
 
         curr_idx = game.next_player_index(curr_idx)
 

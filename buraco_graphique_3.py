@@ -205,7 +205,7 @@ class BuracoGUI:
             for i, game_tuple in enumerate(self.p1.board.cardgames):
                 meld_rect = pygame.Rect(10 + i * 65, 80, CARD_WIDTH, 250)
                 if meld_rect.collidepoint(pos) and self.selected_cards:
-                    self.try_play_cards(i)
+                    self.try_play_cards(i) #ici il faut sans doute add to board game 
                     return
 
             # Défausser (clic sur la poubelle)

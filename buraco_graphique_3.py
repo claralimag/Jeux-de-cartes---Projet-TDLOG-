@@ -198,7 +198,7 @@ class BuracoGUI:
             # Poser un nouveau jeu (clic sur zone vide du plateau joueur)
             player_board_rect = pygame.Rect(0, 80, SCREEN_WIDTH // 3, 350)
             if player_board_rect.collidepoint(pos) and self.selected_cards:
-                self.try_play_cards(-1)
+                self.try_play_cards(-1) #changer try play a add to game/board
                 return
 
             # Étendre un jeu existant

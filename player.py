@@ -1,5 +1,5 @@
 # Defined by a name, a list of cards, a board (BoardPlayer) and a score (functions : add card, move card, play a card (add to board - maybe exception?), change score)
-from cards import Card, Suit
+from cards import Card, Suit, affiche_carte
 from boardplayer import BoardPlayer
 import random
 
@@ -85,6 +85,13 @@ class Player :
         self.update_cards(cards_to_play)
 
         return newscore
+    
+    def cards_size(self) -> int:
+        """
+        Return the number of cards in the player's hand.
+        """
+        return len(self.cards)
+    
     # ---------- Display and hand updates ----------
 
     def show_hand(self) -> None:
@@ -93,7 +100,7 @@ class Player :
         """
         print(f"Hand of {self.name}:")
         for idx, card in enumerate(self.cards):
-            print(f"{idx}: {card.value} of {card.suit}")
+            print(f"{idx}:{affiche_carte(card)}")
 
     def update_cards(self, cards_to_remove: list["Card"]) -> bool:
         """

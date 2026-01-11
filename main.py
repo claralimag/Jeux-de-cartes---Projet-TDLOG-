@@ -1,6 +1,7 @@
 import boardplayer as bp
 from boardgame import BoardGame
 from player import Player, Robot, RobotEasy
+from cards import Card, affiche_carte
 
 
 def get_choice(prompt: str, max_val: int) -> int:
@@ -38,6 +39,8 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) 
     # --- DRAW PHASE ---
     picked_from_discard = curr_p.robot_pick_cards(curr_idx, game.discard_pile, game.is_open)
 
+    curr_p.show_hand()  #JUST FOR DEBUGGING
+
     if picked_from_discard and game.discard_pile:
         discard_pile = game.draw_from_discard()
         curr_p.add_cards(discard_pile)
@@ -45,13 +48,13 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) 
     else:
         card = game.draw_from_deck()
         curr_p.add_card(card)
-        print(f"{curr_p.name} drew: {card}")
+        print(f"{curr_p.name} drew: {affiche_carte(card)}")
 
     # --- ACTION PHASE ---
     card_to_discard = curr_p.robot_play(curr_idx) #ceci tourne à l'infini
     curr_p.update_cards([card_to_discard])
     game.add_to_discard(card_to_discard) 
-    print(f"{curr_p.name} discarded: {card_to_discard}")
+    print(f"{curr_p.name} discarded: {affiche_carte(card_to_discard)}")
 
     return False
 
@@ -73,7 +76,7 @@ def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int)
     else:
         card = game.draw_from_deck()
         curr_p.add_card(card)
-        print(f"You drew: {card}")
+        print(f"You drew: {affiche_carte(card)}")
 
     # --- ACTION PHASE ---
     while True:
@@ -141,7 +144,7 @@ def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int)
     card_to_discard = curr_p.cards[idx]
     curr_p.update_cards([card_to_discard])
     game.add_to_discard(card_to_discard)
-    print(f"Discarded: {card_to_discard}")
+    print(f"Discarded: {affiche_carte(card_to_discard)}")
 
     return False, first_game
 

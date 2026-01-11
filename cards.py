@@ -399,6 +399,7 @@ class Card:
             ordered_list.append(joker_card)
             return ordered_list
       return None
+    
 def affiche_carte(card: "Card") -> str:
     "Retourne une représentation lisible d'une carte, par ex. 'A♥'"
     if card.suit == Suit.JOKER:

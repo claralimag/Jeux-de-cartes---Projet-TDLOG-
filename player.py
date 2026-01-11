@@ -119,7 +119,8 @@ class Player :
         self.cards = cards
 
 
-class Robot(Player):    def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
+class Robot(Player):    
+    def __init__(self, name0 : str, cards0 : list[Card], board0 : BoardPlayer, score0 : int ) -> None:
         super().__init__(name0, cards0, board0, score0)
 
     def robot_pick_cards(self, whichplayer : int, discard_pile: list[Card], open : bool) -> None:
@@ -157,32 +158,16 @@ class Robot(Player):    def __init__(self, name0 : str, cards0 : list[Card], boa
                 cards, is_pure, points = deck[j] 
 
                 new_card = Card.card_to_game(cards + [card0])
-                if new_card:    #je suppose que orderedCards verifie si la liste de cartes est une suite valide
+                if new_card:    
                     self.play_cards([card0], j, False)
                     self.update_cards([card0])
-                    break # Card is no longer available 
+                    break 
                     
             if new_card:
                 i = 0
             else:
                 i += 1
             
-            
-        
-    def play_a_card_bis(self, whichplayer: int) -> None:
-        deck = self.board.cardgames
-
-        for card in self.cards[:]:          # copie de sécurité
-            for j, (cards, is_pure, points) in enumerate(deck):
-
-                if Card.card_to_game(cards + [card]):
-                    self.play_cards([card], j, False)
-                    self.update_cards([card])
-                    return                  # 🔴 SORTIE IMMÉDIATE
-
-        # Rien n’a été joué → on sort proprement
-        return
-
             
     def clean_three_sequence_possible(self) -> bool:
             '''
@@ -410,7 +395,6 @@ class RobotEasy(Robot):
             return False
     
     def robot_play(self, whichplayer : int) -> Card:
-        #Est ce que ca tourne à l'infini?
         # input : Player representing the computer
         # output : Card to trow out in the trash 
         # If the robot can play cards, it plays them: even if its not optimal and it can only play a jocker if adding to an existing sequence

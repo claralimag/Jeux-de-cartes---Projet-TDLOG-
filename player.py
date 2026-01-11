@@ -164,7 +164,7 @@ class Robot(Player):
                 print(j)
                 cards, is_pure, points = deck[j] 
 
-                new_card = Card.card_to_game(cards + [card0])
+                new_card = Card.card_to_game(card0, cards, is_pure)
                 if new_card:    
                     self.play_cards([card0], j, False)
                     self.update_cards([card0])
@@ -194,9 +194,7 @@ class Robot(Player):
             if n<3:
                 return False
 
-            print(type(self.cards[0]))
-            ordered_cards = Card.ordercards(self.cards) #je suppose que cards.Card.order ordonne les cartes
-            
+            ordered_cards = Card.ordercards(self.cards)
 
             cards_heart = [c for c in ordered_cards if c.suit == Suit.HEARTS]
             cards_diamond = [c for c in ordered_cards if c.suit == Suit.DIAMONDS]
@@ -208,11 +206,11 @@ class Robot(Player):
                     m = len(color_cards)
                     i = 0
                     while i <= m - 3:
-                        sub_sequence = color_cards[i:i+2]
+                        sub_sequence = color_cards[i:i+3] # Slice gets 3 cards (i, i+1 and i+2)
                         if Card.order(sub_sequence):
                                 color_cards.pop(i)
-                                color_cards.pop(i+1)
-                                color_cards.pop(i+2)
+                                color_cards.pop(i)
+                                color_cards.pop(i)
                                 self.play_cards(sub_sequence, -1, False)
                                 i = 0  # restart from the beginning
                                 m -= 3
@@ -241,33 +239,48 @@ class Robot(Player):
         if n<3:
             return False
 
-        ordered_cards = Card.ordercards(self.cards) #je suppose que cards.Card.order ordonne les cartes
+        ordered_cards = Card.ordercards(self.cards) 
 
-        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
-        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
-        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
-        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEARTS]
+        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMONDS]
+        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUBS]
+        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADES]
 
         jockers = [card for card in ordered_cards if card.suit == Suit.JOKER]
 
+        if len(jockers) == 0:
+            return False
+        
         cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
-
-        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        
         for color_cards in cards_by_color:
-            while len(color_cards) >= 2 and len(jockers) > 0:
+            if len(color_cards) >= 2 and len(jockers) > 0:
                 m = len(color_cards)
                 i = 0
-                while i < m - 3:
-                    sub_sequence = color_cards[i:i+2] 
-                    if Card.three_cards_with_jocker(jockers[0],sub_sequence):
+                while i <= m - 2:
+                    sub_sequence = color_cards[i:i+2] # Slice gets 2 cards (i and i+1)
+                    
+                    if Card.order(sub_sequence + [jockers[0]]):
+
+                        # Remove the naturals from hand
                         color_cards.pop(i)
-                        color_cards.pop(i+1)
-                        jockers.pop(0)
-                        self.play_cards(sub_sequence, -1, False)
-                        self.update_cards(sub_sequence + [jockers[0]])
-                        i = 0  # restart from the beginning
+                        color_cards.pop(i)
+
+                        # Remove the Joker
+                        used_joker = jockers.pop(0)
+
+                        # Play the move
+                        self.play_cards(sub_sequence + [used_joker], -1, False)
+                        
+                        # Reset loop
+                        i = 0 
                         m -= 2
                         board_changed = True
+
+                        if not jockers: 
+                            return True
+
                     else:
                         i += 1
 
@@ -296,32 +309,57 @@ class Robot(Player):
 
         ordered_cards = Card.ordercards(self.cards) 
     
-        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
-        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
-        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
-        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
+        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEARTS and card.value != 2]
+        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMONDS and card.value != 2]
+        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUBS and card.value != 2]
+        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADES and card.value != 2]
 
+        twos = [c for c in ordered_cards if c.value == 2]
+
+        if not twos:
+            return False
+        
         cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
-        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
         
         #two as a jocker of the same color
         for color_cards in cards_by_color:
-            twos = [card for card in color_cards if card.value == 2]
-            while len(color_cards) >= 2 and len(twos) > 0:
+
+            if len(color_cards) < 2:
+                continue
+            
+            # Find a 2 of the SAME suit
+            # Since color_cards contains only one suit, we just check the first card's suit
+            current_suit = color_cards[0].suit
+            same_suit_twos = [t for t in twos if t.suit == current_suit]
+
+            if same_suit_twos:
                 m = len(color_cards)
                 i = 0
-                while i < m - 2:
+                while i <= m - 2:
                     sub_sequence = color_cards[i:i+2] 
 
-                    if Card.three_cards_with_jocker(twos[0],sub_sequence) and ((not(sub_sequence[0].value == 2) and not(sub_sequence[1].value == 2)) or (sub_sequence[0].value == 2 and not(sub_sequence[1].value == 2) and len(twos) >=2) or (sub_sequence[1].value == 2 and not(sub_sequence[0].value == 2) and len(twos) >=2)):
+                    # Try with the first available 2 of the same suit
+                    candidate_two = same_suit_twos[0]
+
+                    if Card.order([candidate_two] + sub_sequence):
+                        # Pop the naturals
                         color_cards.pop(i)
                         color_cards.pop(i)
-                        twos.pop(0)
-                        self.play_cards(sub_sequence, -1, False)
-                        self.update_cards(sub_sequence + [twos[0]])
-                        i = 0  # restart from the beginning
+                        
+                        # Pop the 2 from the main list and our temp list
+                        twos.remove(candidate_two)
+                        same_suit_twos.pop(0)
+
+                        self.play_cards(sub_sequence + [candidate_two], -1, False)
+                        
+                        i = 0
                         m -= 2
                         board_changed = True
+                        
+                        if not same_suit_twos: # No more 2s of this suit
+                            break
+
                     else:
                         i += 1
 
@@ -341,42 +379,103 @@ class Robot(Player):
             
         '''
 
-        n = len(self.cards)
-        
         board_changed = False
 
-        if n<3:
+        if len(self.cards) < 3:
             return False
 
         ordered_cards = Card.ordercards(self.cards) 
-    
-        cards_heart = [card for card in ordered_cards if card.suit == Suit.HEART]
-        cards_diamond = [card for card in ordered_cards if card.suit == Suit.DIAMOND]
-        cards_club = [card for card in ordered_cards if card.suit == Suit.CLUB]
-        cards_spade = [card for card in ordered_cards if card.suit == Suit.SPADE]
 
-        cards_by_color = [cards_heart, cards_diamond, cards_club, cards_spade]
-        cards_by_color = random.shuffle(cards_by_color)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
+        twos = [c for c in ordered_cards if c.value == 2]
+
+        cards_by_color_suit = [Suit.HEARTS, Suit.DIAMONDS,  Suit.CLUBS, Suit.SPADES]
+        random.shuffle(cards_by_color_suit)  #to add some randomness in the robot's behavior: he won't always add a jocker to the same color
         
         #two as a jocker of the same color
-        for color_cards in cards_by_color:
-            twos = [card for card in color_cards if card.value == 2 and not(card.suit == color_cards[0].suit)]
-            while len(color_cards) >= 2 and len(twos) > 0:
+        for suit in cards_by_color_suit: 
+            color_cards = [card for card in ordered_cards if card.suit == suit]
+
+            if len(color_cards) < 2:
+                continue
+
+            current_suit = color_cards[0].suit
+
+            # We first look for twos of different suits 
+            diff_suit_twos = [t for t in twos if t.suit != current_suit]
+            
+            if diff_suit_twos:
                 m = len(color_cards)
                 i = 0
-                while i < m - 2:
-                    sub_sequence = color_cards[i:i+2] 
+                while i <= m - 2:
+                    sub_sequence = color_cards[i:i+2]
+                    candidate_two = diff_suit_twos[0]
 
-                    if Card.three_cards_with_jocker(twos[0],sub_sequence):
+                    if Card.order(sub_sequence + [candidate_two]):
+                    
                         color_cards.pop(i)
-                        twos.pop(0)
-                        self.play_cards(sub_sequence, -1, False)
-                        self.update_cards(sub_sequence + [twos[0]])
-                        i = 0  # restart from the beginning
+                        color_cards.pop(i)
+
+                        twos.remove(candidate_two)
+                        diff_suit_twos.pop(0)
+
+                        self.play_cards(sub_sequence + [candidate_two], -1, False)
+
+                        ordered_cards.remove(candidate_two)
+                        ordered_cards.remove(sub_sequence[0])
+                        ordered_cards.remove(sub_sequence[1])
+                        
+                        i = 0
                         m -= 2
                         board_changed = True
+                        
+                        if not diff_suit_twos:
+                            break
                     else:
                         i += 1
+
+            # --- LOGIC B: Special Sequence (Ace/Three + Two 2s of SAME suit) ---
+            same_suit_twos = [t for t in twos if t.suit == current_suit]
+
+            # Is there a three or an Ass among color_cards?
+            cards_as = [c for c in color_cards if c.value == 1]
+            cards_three = [c for c in color_cards if c.value == 3]
+
+            while len(same_suit_twos) > 1 and (len(cards_as) > 0 or len(cards_three) > 0):
+                if cards_as :
+                    self.play_cards(same_suit_twos[0:2] + [cards_as[0]])
+
+                    color_cards.remove(cards_as[0])
+                    color_cards.remove(same_suit_twos[0])
+                    color_cards.remove(same_suit_twos[1])
+
+                    ordered_cards.remove(cards_as[0])
+                    ordered_cards.remove(same_suit_twos[0])
+                    ordered_cards.remove(same_suit_twos[1])
+
+                    cards_as.pop(0)
+                    same_suit_twos.pop(0)
+                    same_suit_twos.pop(0)
+
+                    if not same_suit_twos:
+                        break
+
+                if cards_three:
+                    self.play_cards(same_suit_twos[0:2] + [cards_three[0]])
+
+                    color_cards.remove(cards_three[0])
+                    color_cards.remove(same_suit_twos[0])
+                    color_cards.remove(same_suit_twos[1])
+
+                    ordered_cards.remove(cards_three[0])
+                    ordered_cards.remove(same_suit_twos[0])
+                    ordered_cards.remove(same_suit_twos[1])
+
+                    cards_three.pop(0)
+                    same_suit_twos.pop(0)
+                    same_suit_twos.pop(0)
+
+                    if not same_suit_twos:
+                        break
 
         return board_changed    
     
@@ -409,6 +508,27 @@ class RobotEasy(Robot):
         self.play_a_card(whichplayer) #robot plays a card if possible
 
         board_changed = self.clean_three_sequence_possible() #robot plays a sequence of at least 3 cards if possible
+
+        if board_changed:
+            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+
+        board_changed = self.two_as_a_jocker_same_colors_sequence_possible() #robot plays a sequence of at least 3 cards with a two as a jocker of same color if possible
+
+        print("two as jocker same color possible :", board_changed)
+
+        if board_changed:
+            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+
+        board_changed = self.jocker_three_sequence_possible() #robot plays a sequence of at least 3 cards with a jocker if possible
+
+        print("jocker three sequence possible :", board_changed)
+
+        if board_changed:
+            self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+        
+        board_changed = self.two_as_a_jocker_diff_colors_sequence_possible() #robot plays a sequence of at least 3 cards with a two as a jocker of different colors if possible
+
+        print("two as jocker diff color possible :", board_changed)
 
         if board_changed:
             self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible

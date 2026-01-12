@@ -59,7 +59,7 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) 
     print(f"{curr_p.name} discarded: {affiche_carte(card_to_discard)}")
 
     curr_p.show_hand()  #JUST FOR DEBUGGING
-    
+
     return False
 
 
@@ -190,6 +190,6 @@ def play(player1: Player, player2: Player) -> None:
 
 
 if __name__ == "__main__":
-    p1 = Player("Alice", [], bp.BoardPlayer(), 0)
+    p1 = RobotEasy("Alice", [], bp.BoardPlayer(), 0)
     p2 = RobotEasy("Bot", [], bp.BoardPlayer(), 0)
     play(p1, p2)

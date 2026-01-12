@@ -6,7 +6,7 @@ import main as game_main
 from player import Player
 from boardplayer import BoardPlayer
 
-HOST = "0.0.0.0"
+HOST = "127.0.0.1"
 PORT = 5050
 
 REMOTES: List["Remote"] = []

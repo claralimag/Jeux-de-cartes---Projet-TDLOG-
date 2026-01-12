@@ -64,9 +64,10 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int) -> bool:
             new_pot = game.take_pot()
             curr_p.add_cards(new_pot)
             curr_p.first_game = False
+            curr_p.score += 100
         except RuntimeError:
             print("No pots left!")
-    
+            
     # --- DISCARD PHASE ---
     if card_to_discard:
         curr_p.update_cards([card_to_discard])
@@ -76,6 +77,7 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int) -> bool:
         # Check if the game ended (Robot went out)
         if len(curr_p.cards) == 0 and not curr_p.first_game:
             if game.can_end(curr_idx):
+                self.points += 100
                 return True
              
     curr_p.show_hand()  #JUST FOR DEBUGGING
@@ -132,6 +134,7 @@ def human_turn(curr_p: Player, game: BoardGame, curr_idx: int) -> tuple[bool, bo
                         new_pot = game.take_pot()
                         curr_p.add_cards(new_pot)
                         print(f"{curr_p.name} took a new pot with {len(new_pot)} cards.")
+                        curr_p.points += 100
                         curr_p.first_game = False
                     except RuntimeError:
                         if game.can_end(curr_idx):

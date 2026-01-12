@@ -162,7 +162,7 @@ class Robot(Player):
             for j in range(len(deck)):
                 cards, is_pure, points = deck[j] 
 
-                new_card = Card.card_to_game(card0, cards, is_pure)
+                new_card = Card.order([card0] + cards)
                 if new_card:    
                     print("Robot ", self.name, " plays ", affiche_carte(card0), " on game ", j)
                     self.play_cards([card0], j, False)

@@ -32,7 +32,7 @@ def input_cards() -> tuple[list[int], int]:
     return indexes, game_index
 
 
-def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) -> bool:
+def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int) -> bool:
     """
     Handle one turn for a robot player.
     """
@@ -54,16 +54,35 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) 
 
     # --- ACTION PHASE ---
     card_to_discard = curr_p.robot_play(curr_idx) 
-    curr_p.update_cards([card_to_discard])
-    game.add_to_discard(card_to_discard) 
-    print(f"{curr_p.name} discarded: {affiche_carte(card_to_discard)}")
 
+    # remove the discard card from hand calculation temporarily
+    remaining_cards = len(curr_p.cards) - 1
+
+    if remaining_cards == 0 and curr_p.first_game:
+        print(f"--- {curr_p.name} FINISHED HAND & TAKES THE POT! ---")
+        try:
+            new_pot = game.take_pot()
+            curr_p.add_cards(new_pot)
+            curr_p.first_game = False
+        except RuntimeError:
+            print("No pots left!")
+    
+    # --- DISCARD PHASE ---
+    if card_to_discard:
+        curr_p.update_cards([card_to_discard])
+        game.add_to_discard(card_to_discard) 
+        print(f"{curr_p.name} discarded: {affiche_carte(card_to_discard)}")
+        
+        # Check if the game ended (Robot went out)
+        if len(curr_p.cards) == 0 and not curr_p.first_game:
+            if game.can_end(curr_idx):
+                return True
+             
     curr_p.show_hand()  #JUST FOR DEBUGGING
 
     return False
 
-
-def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int) -> tuple[bool, bool]:
+def human_turn(curr_p: Player, game: BoardGame, curr_idx: int) -> tuple[bool, bool]:
     """
     Handle one turn for a human player.
     Returns (should_stop, first_game_updated)
@@ -108,22 +127,22 @@ def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int)
 
             # If the player emptied their hand
             if not hand_nonempty:
-                if first_game:
+                if curr_p.first_game:
                     try:
                         new_pot = game.take_pot()
                         curr_p.add_cards(new_pot)
                         print(f"{curr_p.name} took a new pot with {len(new_pot)} cards.")
-                        first_game = False
+                        curr_p.first_game = False
                     except RuntimeError:
                         if game.can_end(curr_idx):
                             print("The game is over.")
-                            return True, first_game
+                            return True
                         else:
                             print("You cannot end the game yet.")
                 else:
                     if game.can_end(curr_idx):
                         print("The game is over.")
-                        return True, first_game
+                        return True
                     else:
                         print("You cannot end the game yet.")
 
@@ -141,7 +160,7 @@ def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int)
     curr_p.show_hand()
     if not curr_p.cards:
         print("You have no cards left to discard.")
-        return False, first_game
+        return False
 
     print("Choose the index of the card to discard:")
     idx = get_choice("> ", len(curr_p.cards) - 1)
@@ -150,7 +169,7 @@ def human_turn(curr_p: Player, game: BoardGame, first_game: bool, curr_idx: int)
     game.add_to_discard(card_to_discard)
     print(f"Discarded: {affiche_carte(card_to_discard)}")
 
-    return False, first_game
+    return False
 
 
 def play(player1: Player, player2: Player) -> None:
@@ -162,7 +181,6 @@ def play(player1: Player, player2: Player) -> None:
     game = BoardGame([p1, p2], is_open=True)
 
     curr_idx = 0
-    first_game_flags = [True, True]  # Each player starts before taking their pot
 
     while True:
         curr_p = game.players[curr_idx]
@@ -170,9 +188,9 @@ def play(player1: Player, player2: Player) -> None:
         game.display_state()
 
         if isinstance(curr_p, Robot):
-            should_stop = robot_turn(curr_p, game, curr_idx, first_game_flags[curr_idx])
+            should_stop = robot_turn(curr_p, game, curr_idx)
         else:
-            should_stop, first_game_flags[curr_idx] = human_turn(curr_p, game, first_game_flags[curr_idx], curr_idx)
+            should_stop= human_turn(curr_p, game, curr_idx)
 
         if should_stop:
             break

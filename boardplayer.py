@@ -50,6 +50,7 @@ class BoardPlayer :
                           0..N-1 -> extend existing meld at that index
         :return: points gained by this move (0 if invalid)
         """
+        
         # --- Start a new meld ---
         if whichgame == -1:
             cards_list_copy = deepcopy(cards_list) 

@@ -18,6 +18,7 @@ class Player :
             self.cards = cards
             self.board = board
             self.score = score
+            self.first_game = True  # To track if it's the player's first game
 
 
     # ---------- Hand management (drawing / taking from discard pile) ----------
@@ -71,6 +72,11 @@ class Player :
         :return: Points earned by playing these cards
         :raises ValueError: if the move is invalid
         """
+        #Checking if the player can play those cards : end ?
+        if len(self.cards) - len(cards_to_play)  <= 1 and not self.first_game:
+            if not self.can_end():
+                print("You cannot end the game yet.")
+                return 0 
 
         # Delegate validity checking + scoring to BoardPlayer
         # You changed BoardPlayer to handle "new vs existing" inside add_to_board
@@ -92,6 +98,7 @@ class Player :
         """
         return len(self.cards)
     
+        
     # ---------- Display and hand updates ----------
 
     def show_hand(self) -> None:
@@ -124,6 +131,17 @@ class Player :
         Replace the player's hand completely (useful when taking a pot as a new hand).
         """
         self.cards = cards
+
+    def can_end(self) -> bool:
+        """
+        Check if the player can end the game.
+        (Example condition: has at least one clean sequence of 7+ cards)
+        """
+        for seq in self.board: 
+            if len(seq[0]) >= 7 and seq[1]:
+                return True
+            
+        return False
 
 
 class Robot(Player):    
@@ -159,16 +177,20 @@ class Robot(Player):
 
         while i<self.cards_size():
             card0 = self.cards[i]
+            end = 1
+
             for j in range(len(deck)):
                 cards, is_pure, points = deck[j] 
 
                 new_card = Card.order([card0] + cards)
                 if new_card:    
                     print("Robot ", self.name, " plays ", affiche_carte(card0), " on game ", j)
-                    self.play_cards([card0], j, False)
+                    end : int = self.play_cards([card0], j, False)
                     break 
                     
             if new_card:
+                if end == 0:
+                    break   
                 i = 0
             else:
                 i += 1
@@ -209,7 +231,11 @@ class Robot(Player):
                                 color_cards.pop(i)
                                 color_cards.pop(i)
                                 color_cards.pop(i)
-                                self.play_cards(sub_sequence, -1, False)
+
+                                end : int = self.play_cards(sub_sequence, -1, False)
+                                if end == 0:
+                                    return board_changed
+                                
                                 i = 0  # restart from the beginning
                                 m -= 3
                                 board_changed = True
@@ -269,7 +295,10 @@ class Robot(Player):
                         used_joker = jockers.pop(0)
 
                         # Play the move
-                        self.play_cards(sub_sequence + [used_joker], -1, False)
+                        end : int = self.play_cards(sub_sequence + [used_joker], -1, False)
+
+                        if end == 0:
+                            return board_changed
                         
                         # Reset loop
                         i = 0 
@@ -349,7 +378,9 @@ class Robot(Player):
                         twos.remove(candidate_two)
                         same_suit_twos.pop(0)
 
-                        self.play_cards(sub_sequence + [candidate_two], -1, False)
+                        end : int = self.play_cards(sub_sequence + [candidate_two], -1, False)
+                        if end == 0:
+                            return board_changed
                         
                         i = 0
                         m -= 2
@@ -416,8 +447,11 @@ class Robot(Player):
                         twos.remove(candidate_two)
                         diff_suit_twos.pop(0)
 
-                        self.play_cards(sub_sequence + [candidate_two], -1, False)
+                        end : int = self.play_cards(sub_sequence + [candidate_two], -1, False)
 
+                        if end == 0: 
+                            return board_changed
+                        
                         ordered_cards.remove(candidate_two)
                         ordered_cards.remove(sub_sequence[0])
                         ordered_cards.remove(sub_sequence[1])
@@ -428,6 +462,7 @@ class Robot(Player):
                         
                         if not diff_suit_twos:
                             break
+
                     else:
                         i += 1
 
@@ -503,6 +538,8 @@ class RobotEasy(Robot):
         # output : Card to trow out in the trash 
         # If the robot can play cards, it plays them: even if its not optimal and it can only play a jocker if adding to an existing sequence
         
+        last_play : list[Card]= []
+
         self.play_a_card(whichplayer) #robot plays a card if possible
 
         board_changed = self.clean_three_sequence_possible() #robot plays a sequence of at least 3 cards if possible

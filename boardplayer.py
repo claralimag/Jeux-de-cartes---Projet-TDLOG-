@@ -95,6 +95,13 @@ class BoardPlayer :
 
             # Return only the difference (points gained this move)
             return new_score - old_score
+
+    def show_deck(self) -> None:
+        """Display all melds played by the player."""
+        for idx, (cards, is_pure, score) in enumerate(self.cardgames):
+            meld_type = "Pure Sequence" if is_pure else "Impure Sequence"
+            card_str = ', '.join([str(card) for card in cards])
+            print(f"Meld {idx}: {meld_type} | Cards: {card_str} | Score: {score}")
             
    
 

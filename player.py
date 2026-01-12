@@ -160,14 +160,12 @@ class Robot(Player):
         while i<self.cards_size():
             card0 = self.cards[i]
             for j in range(len(deck)):
-                print(i)
-                print(j)
                 cards, is_pure, points = deck[j] 
 
                 new_card = Card.card_to_game(card0, cards, is_pure)
                 if new_card:    
+                    print("Robot ", self.name, " plays ", affiche_carte(card0), " on game ", j)
                     self.play_cards([card0], j, False)
-                    self.update_cards([card0])
                     break 
                     
             if new_card:
@@ -532,6 +530,8 @@ class RobotEasy(Robot):
 
         if board_changed:
             self.play_a_card(whichplayer) #robot adds cards to existing sequences if possible
+
+        self.board.show_deck()  #JUST FOR DEBUGGING
 
         #Throw out a random card:
         n = len(self.cards)

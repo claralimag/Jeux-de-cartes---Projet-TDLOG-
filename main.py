@@ -50,12 +50,16 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int, first_game: bool) 
         curr_p.add_card(card)
         print(f"{curr_p.name} drew: {affiche_carte(card)}")
 
+    curr_p.show_hand()  #JUST FOR DEBUGGING
+
     # --- ACTION PHASE ---
-    card_to_discard = curr_p.robot_play(curr_idx) #ceci tourne à l'infini
+    card_to_discard = curr_p.robot_play(curr_idx) 
     curr_p.update_cards([card_to_discard])
     game.add_to_discard(card_to_discard) 
     print(f"{curr_p.name} discarded: {affiche_carte(card_to_discard)}")
 
+    curr_p.show_hand()  #JUST FOR DEBUGGING
+    
     return False
 
 

@@ -159,7 +159,10 @@ class Card:
 
       non_joker_list = [card for card in card_list if card.suit != Suit.JOKER and card.value != 2]
       joker_list     = [card for card in card_list if card.suit == Suit.JOKER or card.value == 2]  # jokers and twos
-
+          
+      if len(non_joker_list)==0:
+        return None
+          
       this_suit = non_joker_list[0].suit
 
       if not all(card.suit == this_suit for card in non_joker_list):

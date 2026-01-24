@@ -140,7 +140,7 @@ class BuracoGUI:
             self.screen.blit(img, (mid_x + 30, 180 + i * 18))
 
         # --- Zone Joueur (Gauche) ---
-        # Pot du joueur (face cachée) - Déplacé en haut à droite de sa zone, à côté du score
+        # Pot du joueur (face cachée)
         if self.p1.first_game and len(self.game.pots) > 0:
             pot_x = mid_x - CARD_WIDTH - 10
             self.screen.blit(self.font.render("Pot", True, WHITE), (pot_x, 5))
@@ -216,7 +216,6 @@ class BuracoGUI:
 
             # 1. Tester d'abord si on clique sur un jeu existant pour l'étendre
             for i, game_list in enumerate(self.p1.board.cardgames):
-                # Zone de clic élargie pour couvrir toute la colonne du jeu existant
                 meld_cards_count = len(game_list[0])
                 meld_height = 15 * (meld_cards_count - 1) + CARD_HEIGHT
                 meld_rect = pygame.Rect(10 + i * 65, 150, CARD_WIDTH, meld_height)
@@ -230,6 +229,7 @@ class BuracoGUI:
                 self.try_play_cards(-1)
                 return
 
+            # 3. Défausse
             if pygame.Rect(mid_x + 30, 180, CARD_WIDTH, 350).collidepoint(pos):
                 if len(self.selected_cards) == 1:
                     card_to_discard = self.selected_cards[0]
@@ -277,16 +277,15 @@ class BuracoGUI:
             return
 
         cards_to_play = self.selected_cards[:]
-        # Sauvegarde pour annulation en cas d'échec
         original_hand = self.p1.cards[:]
         original_score = self.p1.score
         original_first_game = self.p1.first_game
 
         try:
-            # 1. Retirer les cartes de la main (comme dans main.py ligne 128)
+            # 1. Retirer les cartes de la main
             hand_nonempty = self.p1.update_cards(cards_to_play)
 
-            # 2. Gérer le cas de la main vide (pot ou fin) AVANT de poser (comme dans main.py ligne 131)
+            # 2. Gérer le cas de la main vide (pot ou fin) AUTOMATIQUEMENT
             if not hand_nonempty:
                 if self.p1.first_game:
                     try:
@@ -302,7 +301,6 @@ class BuracoGUI:
                             self.message = "Félicitations ! Vous avez gagné."
                             return
                         else:
-                            # Si on ne peut pas finir, on doit annuler le coup car la main est vide
                             raise ValueError("Vous ne pouvez pas finir le jeu maintenant.")
                 else:
                     if self.game.can_end(0):
@@ -313,18 +311,15 @@ class BuracoGUI:
                     else:
                         raise ValueError("Vous ne pouvez pas finir le jeu maintenant.")
 
-            # 3. Tenter de poser les cartes sur le plateau (comme dans main.py ligne 153)
-            # Note: play_cards dans votre player.py appelle board.add_to_board
+            # 3. Tenter de poser les cartes sur le plateau
             points = self.p1.play_cards(cards_to_play, game_index)
             
             if points > 0:
                 self.message = f"Coup réussi ! (+{points} pts). Continuez ou défaussez."
             else:
-                # Si points == 0, le coup est invalide selon boardplayer.py
                 raise ValueError("Combinaison invalide.")
 
         except (ValueError, IndexError, Exception) as e:
-            # En cas d'erreur, on restaure l'état précédent (Annulation)
             self.p1.cards = original_hand
             self.p1.score = original_score
             self.p1.first_game = original_first_game

@@ -77,7 +77,7 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int) -> bool:
         # Check if the game ended (Robot went out)
         if len(curr_p.cards) == 0 and not curr_p.first_game:
             if game.can_end(curr_idx):
-                self.points += 100
+                curr_p.points += 100
                 return True
              
     curr_p.show_hand()  #JUST FOR DEBUGGING

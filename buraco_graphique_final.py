@@ -143,7 +143,7 @@ class BuracoGUI:
             self.screen.blit(img, (mid_x + 30, 180 + i * 18))
 
         # --- Zone Joueur (Gauche) ---
-        # Pot du joueur (face cachée)
+        # Pot du joueur
         if self.p1.first_game and len(self.game.pots) > 0:
             pot_x = mid_x - CARD_WIDTH - 10
             self.screen.blit(self.font.render("Pot", True, WHITE), (pot_x, 5))
@@ -166,14 +166,14 @@ class BuracoGUI:
                 self.screen.blit(img, (10 + i * 65, 150 + j * 15))
 
         # --- Zone Robot (Droite) ---
-        # Pot du robot (face cachée)
+        # Pot du robot 
         if self.p2.first_game and len(self.game.pots) > 0:
             pot_x = SCREEN_WIDTH - CARD_WIDTH - 10
             pot_y = SCREEN_HEIGHT - CARD_HEIGHT - 50
             self.screen.blit(self.font.render("Pot", True, WHITE), (pot_x, pot_y - 25))
             self.screen.blit(self.back_image, (pot_x, pot_y))
 
-        # Main du robot (disposée comme l'humain)
+        # Main du robot 
         for i in range(len(self.p2.cards)):
             x, y = self.get_hand_card_pos(i, is_robot=True)
             self.screen.blit(self.back_image, (x, y))
@@ -288,7 +288,7 @@ class BuracoGUI:
             # 1. Retirer les cartes de la main
             hand_nonempty = self.p1.update_cards(cards_to_play)
 
-            # 2. Gérer le cas de la main vide (pot ou fin) AUTOMATIQUEMENT
+            # 2. Gérer le cas de la main vide (pot ou fin) 
             if not hand_nonempty:
                 if self.p1.first_game:
                     try:

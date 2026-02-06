@@ -57,7 +57,7 @@ class BuracoGUI:
                 else: name = str(val)
                 
                 filename = f"{name}_of_{suit}.png"
-                path = os.path.join("card_images", filename)
+                path = os.path.join("images", filename)
                 try:
                     img = pygame.image.load(path)
                     self.card_images[(suit, val)] = pygame.transform.scale(img, (CARD_WIDTH, CARD_HEIGHT))
@@ -67,8 +67,8 @@ class BuracoGUI:
                     self.card_images[(suit, val)] = img
         
         try:
-            joker_path = os.path.join("card_images", "joker.png")
-            back_path = os.path.join("card_images", "back_side.png")
+            joker_path = os.path.join("images", "joker.png")
+            back_path = os.path.join("images", "back_side.png")
             self.card_images["joker"] = pygame.transform.scale(pygame.image.load(joker_path), (CARD_WIDTH, CARD_HEIGHT))
             self.back_image = pygame.transform.scale(pygame.image.load(back_path), (CARD_WIDTH, CARD_HEIGHT))
         except:

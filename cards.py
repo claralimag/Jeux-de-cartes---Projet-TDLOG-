@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import List
 
-# Cards : defines the Card class and related functions (enumerate ?)
+# Cards : defines the Card class and related functions 
 
-class Suit(Enum): #suit means "couleur" in french
+class Suit(Enum): 
     CLUBS = "clubs"
     DIAMONDS = "diamonds"
     HEARTS = "hearts"
@@ -82,7 +82,8 @@ class Card:
 
         # If we got here, every neighboring pair "follows"
         return True, pure, nb_unpure
-
+        
+    #ordercards orders the cards in the players hand (suit and value)
     @staticmethod
     def ordercards(card_list: list["Card"]) -> list["Card"] | None:
         
@@ -147,13 +148,13 @@ class Card:
       return False 
     
       """
-      Cette fonction prend en entrée une liste de carte. Si cette liste ne peut
+      La fonction order prend en entrée une liste de carte. Si cette liste ne peut
       pas former une suite, la fonction renvoie none. Si elle peut former une
-      suite, elle renvoie la liste ordonnée
+      suite, elle renvoie la liste ordonnée 
       """
     @staticmethod #on a le droit a UN SEUL joker et traiter l'ace
     def order(card_list: list["Card"]) -> list["Card"] | None:
-#probleme: au debut, 6 7 2, veut poser 4 5
+
       if len(card_list)<3 or len(card_list)>14:
         return None
 
@@ -198,7 +199,7 @@ class Card:
             return [twos_list.pop(),ordered_list.pop(),joker_card]
           if ordered_list[0].value==4:
             return (twos_list.pop(),joker_card,ordered_list.pop())
-        #if we had one card and none if this worked, then it's a fail
+        #if we had one card and none of the past cases  worked, then it's not orderable
         return None
 
       #now, there are at least two elements in ordered_list

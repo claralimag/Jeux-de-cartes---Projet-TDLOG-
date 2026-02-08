@@ -39,7 +39,6 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int) -> bool:
     # --- DRAW PHASE ---
     picked_from_discard = curr_p.robot_pick_cards(curr_idx, game.discard_pile, game.is_open)
 
-    curr_p.show_hand()  #JUST FOR DEBUGGING
 
     if picked_from_discard and game.discard_pile:
         discard_pile = game.draw_from_discard()
@@ -50,7 +49,6 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int) -> bool:
         curr_p.add_card(card)
         print(f"{curr_p.name} drew: {affiche_carte(card)}")
 
-    curr_p.show_hand()  #JUST FOR DEBUGGING
 
     # --- ACTION PHASE ---
     card_to_discard = curr_p.robot_play(curr_idx) 
@@ -80,8 +78,6 @@ def robot_turn(curr_p: Robot, game: BoardGame, curr_idx: int) -> bool:
                 curr_p.points += 100
                 return True
              
-    curr_p.show_hand()  #JUST FOR DEBUGGING
-
     return False
 
 def human_turn(curr_p: Player, game: BoardGame, curr_idx: int) -> tuple[bool, bool]:
